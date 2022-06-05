@@ -1,6 +1,6 @@
 ---
 name: Style issue
-about: Help us improve the Black style
+about: Help us improve the Blackish style
 title: ""
 labels: "T: design"
 assignees: ""
