@@ -5,16 +5,16 @@ from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 
 ACTION_PATH = Path(os.environ["GITHUB_ACTION_PATH"])
-ENV_PATH = ACTION_PATH / ".black-env"
+ENV_PATH = ACTION_PATH / ".blackish-env"
 ENV_BIN = ENV_PATH / ("Scripts" if sys.platform == "win32" else "bin")
 OPTIONS = os.getenv("INPUT_OPTIONS", default="")
 SRC = os.getenv("INPUT_SRC", default="")
-BLACK_ARGS = os.getenv("INPUT_BLACK_ARGS", default="")
+BLACKISH_ARGS = os.getenv("INPUT_BLACKISH_ARGS", default="")
 VERSION = os.getenv("INPUT_VERSION", default="")
 
 run([sys.executable, "-m", "venv", str(ENV_PATH)], check=True)
 
-req = "black[colorama]"
+req = "blackish[colorama]"
 if VERSION:
     req += f"=={VERSION}"
 pip_proc = run(
@@ -29,10 +29,10 @@ if pip_proc.returncode:
     sys.exit(pip_proc.returncode)
 
 
-base_cmd = [str(ENV_BIN / "black")]
-if BLACK_ARGS:
+base_cmd = [str(ENV_BIN / "blackish")]
+if BLACKISH_ARGS:
     # TODO: remove after a while since this is deprecated in favour of SRC + OPTIONS.
-    proc = run([*base_cmd, *shlex.split(BLACK_ARGS)])
+    proc = run([*base_cmd, *shlex.split(BLACKISH_ARGS)])
 else:
     proc = run([*base_cmd, *shlex.split(OPTIONS), *shlex.split(SRC)])
 
