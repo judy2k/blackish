@@ -3,7 +3,7 @@ import logging
 import sys
 from typing import Any, Iterable
 
-from black.output import err
+from blackish.output import err
 
 
 def maybe_install_uvloop() -> None:

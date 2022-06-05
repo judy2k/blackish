@@ -1,0 +1,29 @@
+click>=8.0.0
+platformdirs>=2
+pathspec>=0.9.0
+mypy_extensions>=0.4.3
+
+[:python_full_version < "3.11.0a7"]
+tomli>=1.1.0
+
+[:python_version < "3.10"]
+typing_extensions>=3.10.0.0
+
+[:python_version < "3.7"]
+dataclasses>=0.6
+
+[:python_version < "3.8" and implementation_name == "cpython"]
+typed-ast>=1.4.2
+
+[colorama]
+colorama>=0.4.3
+
+[d]
+aiohttp>=3.7.4
+
+[jupyter]
+ipython>=7.8.0
+tokenize-rt>=3.2.0
+
+[uvloop]
+uvloop>=0.15.2

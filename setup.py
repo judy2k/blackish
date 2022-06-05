@@ -83,7 +83,9 @@ setup(
     author="Łukasz Langa",
     author_email="lukasz@langa.pl",
     url="https://github.com/judy2k/blackish",
-    project_urls={"Changelog": "https://github.com/judy2k/blackish/blob/main/CHANGES.md"},
+    project_urls={
+        "Changelog": "https://github.com/judy2k/blackish/blob/main/CHANGES.md"
+    },
     license="MIT",
     py_modules=["_blackish_version"],
     ext_modules=ext_modules,

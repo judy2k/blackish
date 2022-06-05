@@ -30,8 +30,8 @@ from blib2to3.pytree import Node, Leaf, type_repr, NL
 from blib2to3 import pygram
 from blib2to3.pgen2 import token
 
-from black.cache import CACHE_DIR
-from black.strings import has_triple_quotes
+from blackish.cache import CACHE_DIR
+from blackish.strings import has_triple_quotes
 
 
 pygram.initialize(CACHE_DIR)
@@ -120,6 +120,7 @@ TEST_DESCENDANTS: Final = {
     syms.term,
     syms.power,
 }
+
 TYPED_NAMES: Final = {syms.tname, syms.tname_star}
 ASSIGNMENTS: Final = {
     "=",

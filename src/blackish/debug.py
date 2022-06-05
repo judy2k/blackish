@@ -4,9 +4,9 @@ from typing import Iterator, TypeVar, Union
 from blib2to3.pytree import Node, Leaf, type_repr
 from blib2to3.pgen2 import token
 
-from black.nodes import Visitor
-from black.output import out
-from black.parsing import lib2to3_parse
+from blackish.nodes import Visitor
+from blackish.output import out
+from blackish.parsing import lib2to3_parse
 
 LN = Union[Leaf, Node]
 T = TypeVar("T")

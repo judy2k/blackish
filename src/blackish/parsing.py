@@ -19,8 +19,8 @@ from blib2to3.pgen2.grammar import Grammar
 from blib2to3.pgen2.parse import ParseError
 from blib2to3.pgen2.tokenize import TokenError
 
-from black.mode import TargetVersion, Feature, supports_feature
-from black.nodes import syms
+from blackish.mode import TargetVersion, Feature, supports_feature
+from blackish.nodes import syms
 
 ast3: Any
 

@@ -6,8 +6,8 @@ from contextlib import ExitStack as does_not_raise
 from typing import ContextManager
 
 from click.testing import CliRunner
-from black.handle_ipynb_magics import jupyter_dependencies_are_installed
-from black import (
+from blackish.handle_ipynb_magics import jupyter_dependencies_are_installed
+from blackish import (
     main,
     NothingChanged,
     format_cell,
@@ -15,7 +15,7 @@ from black import (
     format_file_in_place,
 )
 import pytest
-from black import Mode
+from blackish import Mode
 from _pytest.monkeypatch import MonkeyPatch
 from tests.util import DATA_DIR, read_jupyter_notebook, get_case_path
 
@@ -54,7 +54,7 @@ def test_trailing_semicolon_with_comment() -> None:
 
 
 def test_trailing_semicolon_with_comment_on_next_line() -> None:
-    src = "import black;\n\n# this is a comment"
+    src = "import blackish;\n\n# this is a comment"
     with pytest.raises(NothingChanged):
         format_cell(src, fast=True, mode=JUPYTER_MODE)
 
@@ -221,7 +221,7 @@ def test_cell_magic_with_magic_noop() -> None:
 
 
 def test_automagic() -> None:
-    src = "pip install black"
+    src = "pip install blackish"
     with pytest.raises(NothingChanged):
         format_cell(src, fast=True, mode=JUPYTER_MODE)
 
@@ -318,7 +318,7 @@ def test_entire_notebook_trailing_newline() -> None:
         '   "hash": "e758f3098b5b55f4d87fe30bbdc1367f20f246b483f96267ee70e6c40cb185d8"\n'  # noqa:B950
         "  },\n"
         '  "kernelspec": {\n'
-        '   "display_name": "Python 3.8.10 64-bit (\'black\': venv)",\n'
+        '   "display_name": "Python 3.8.10 64-bit (\'blackish\': venv)",\n'
         '   "name": "python3"\n'
         "  },\n"
         '  "language_info": {\n'
@@ -365,7 +365,7 @@ def test_entire_notebook_no_trailing_newline() -> None:
         '   "hash": "e758f3098b5b55f4d87fe30bbdc1367f20f246b483f96267ee70e6c40cb185d8"\n'  # noqa: B950
         "  },\n"
         '  "kernelspec": {\n'
-        '   "display_name": "Python 3.8.10 64-bit (\'black\': venv)",\n'
+        '   "display_name": "Python 3.8.10 64-bit (\'blackish\': venv)",\n'
         '   "name": "python3"\n'
         "  },\n"
         '  "language_info": {\n'
@@ -441,7 +441,7 @@ def test_cache_isnt_written_if_no_jupyter_deps_single(
     with open(nb) as src, open(tmp_nb, "w") as dst:
         dst.write(src.read())
     monkeypatch.setattr(
-        "black.jupyter_dependencies_are_installed", lambda verbose, quiet: False
+        "blackish.jupyter_dependencies_are_installed", lambda verbose, quiet: False
     )
     result = runner.invoke(
         main, [str(tmp_path / "notebook.ipynb"), f"--config={EMPTY_CONFIG}"]
@@ -449,7 +449,7 @@ def test_cache_isnt_written_if_no_jupyter_deps_single(
     assert "No Python files are present to be formatted. Nothing to do" in result.output
     jupyter_dependencies_are_installed.cache_clear()
     monkeypatch.setattr(
-        "black.jupyter_dependencies_are_installed", lambda verbose, quiet: True
+        "blackish.jupyter_dependencies_are_installed", lambda verbose, quiet: True
     )
     result = runner.invoke(
         main, [str(tmp_path / "notebook.ipynb"), f"--config={EMPTY_CONFIG}"]
@@ -467,13 +467,14 @@ def test_cache_isnt_written_if_no_jupyter_deps_dir(
     with open(nb) as src, open(tmp_nb, "w") as dst:
         dst.write(src.read())
     monkeypatch.setattr(
-        "black.files.jupyter_dependencies_are_installed", lambda verbose, quiet: False
+        "blackish.files.jupyter_dependencies_are_installed",
+        lambda verbose, quiet: False,
     )
     result = runner.invoke(main, [str(tmp_path), f"--config={EMPTY_CONFIG}"])
     assert "No Python files are present to be formatted. Nothing to do" in result.output
     jupyter_dependencies_are_installed.cache_clear()
     monkeypatch.setattr(
-        "black.files.jupyter_dependencies_are_installed", lambda verbose, quiet: True
+        "blackish.files.jupyter_dependencies_are_installed", lambda verbose, quiet: True
     )
     result = runner.invoke(main, [str(tmp_path), f"--config={EMPTY_CONFIG}"])
     assert "reformatted" in result.output
@@ -516,7 +517,7 @@ def test_ipynb_and_pyi_flags() -> None:
 
 def test_unable_to_replace_magics(monkeypatch: MonkeyPatch) -> None:
     src = "%%time\na = 'foo'"
-    monkeypatch.setattr("black.handle_ipynb_magics.TOKEN_HEX", lambda _: "foo")
+    monkeypatch.setattr("blackish.handle_ipynb_magics.TOKEN_HEX", lambda _: "foo")
     with pytest.raises(
         AssertionError, match="Black was not able to replace IPython magic"
     ):

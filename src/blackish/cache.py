@@ -8,9 +8,9 @@ from typing import Dict, Iterable, Set, Tuple
 
 from platformdirs import user_cache_dir
 
-from black.mode import Mode
+from blackish.mode import Mode
 
-from _black_version import version as __version__
+from _blackish_version import version as __version__
 
 
 # types
@@ -21,17 +21,17 @@ Cache = Dict[str, CacheInfo]
 
 
 def get_cache_dir() -> Path:
-    """Get the cache directory used by black.
+    """Get the cache directory used by blackish.
 
     Users can customize this directory on all systems using `BLACK_CACHE_DIR`
     environment variable. By default, the cache directory is the user cache directory
-    under the black application.
+    under the blackish application.
 
-    This result is immediately set to a constant `black.cache.CACHE_DIR` as to avoid
+    This result is immediately set to a constant `blackish.cache.CACHE_DIR` as to avoid
     repeated calls.
     """
     # NOTE: Function mostly exists as a clean way to test getting the cache directory.
-    default_cache_dir = user_cache_dir("black", version=__version__)
+    default_cache_dir = user_cache_dir("blackish", version=__version__)
     cache_dir = Path(os.environ.get("BLACK_CACHE_DIR", default_cache_dir))
     return cache_dir
 

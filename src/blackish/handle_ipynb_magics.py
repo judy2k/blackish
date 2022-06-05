@@ -14,8 +14,8 @@ if sys.version_info >= (3, 10):
 else:
     from typing_extensions import TypeGuard
 
-from black.report import NothingChanged
-from black.output import out
+from blackish.report import NothingChanged
+from blackish.output import out
 
 
 TRANSFORMED_MAGICS = frozenset(
@@ -66,7 +66,7 @@ def jupyter_dependencies_are_installed(*, verbose: bool, quiet: bool) -> bool:
         if verbose or not quiet:
             msg = (
                 "Skipping .ipynb files as Jupyter dependencies are not installed.\n"
-                "You can fix this by running ``pip install black[jupyter]``"
+                "You can fix this by running ``pip install blackish[jupyter]``"
             )
             out(msg)
         return False
@@ -129,7 +129,7 @@ def put_trailing_semicolon_back(src: str, has_trailing_semicolon: bool) -> str:
     else:  # pragma: nocover
         raise AssertionError(
             "INTERNAL ERROR: Was not able to reinstate trailing semicolon. "
-            "Please report a bug on https://github.com/psf/black/issues.  "
+            "Please report a bug on https://github.com/psf/blackish/issues.  "
         ) from None
     return str(tokens_to_src(tokens))
 
@@ -192,7 +192,7 @@ def get_token(src: str, magic: str) -> str:
         if counter > 100:
             raise AssertionError(
                 "INTERNAL ERROR: Black was not able to replace IPython magic. "
-                "Please report a bug on https://github.com/psf/black/issues.  "
+                "Please report a bug on https://github.com/psf/blackish/issues.  "
                 f"The magic might be helpful: {magic}"
             ) from None
     if len(token) + 2 < len(magic):
@@ -259,7 +259,7 @@ def replace_magics(src: str) -> Tuple[str, List[Replacement]]:
             if len(offsets_and_magics) != 1:  # pragma: nocover
                 raise AssertionError(
                     f"Expecting one magic per line, got: {offsets_and_magics}\n"
-                    "Please report a bug on https://github.com/psf/black/issues."
+                    "Please report a bug on https://github.com/psf/blackish/issues."
                 )
             col_offset, magic = (
                 offsets_and_magics[0].col_offset,
@@ -395,12 +395,12 @@ class MagicFinder(ast.NodeVisitor):
 
         For example,
 
-            black_version = !black --version
+            blackish_version = !blackish --version
             env = %env var
 
         would have been (respectively) transformed to
 
-            black_version = get_ipython().getoutput('black --version')
+            blackish_version = get_ipython().getoutput('blackish --version')
             env = get_ipython().run_line_magic('env', 'var')
 
         and we look for instances of any of the latter.
@@ -416,7 +416,7 @@ class MagicFinder(ast.NodeVisitor):
             else:
                 raise AssertionError(
                     f"Unexpected IPython magic {node.value.func.attr!r} found. "
-                    "Please report a bug on https://github.com/psf/black/issues."
+                    "Please report a bug on https://github.com/psf/blackish/issues."
                 ) from None
             self.magics[node.value.lineno].append(
                 OffsetAndMagic(node.value.col_offset, src)

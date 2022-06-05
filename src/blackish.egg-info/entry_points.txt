@@ -1,0 +1,3 @@
+[console_scripts]
+blackish = blackish:patched_main
+blackishd = blackishd:patched_main [d]

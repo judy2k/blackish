@@ -7,7 +7,7 @@ from pathlib import Path
 
 from click import style
 
-from black.output import out, err
+from blackish.output import out, err
 
 
 class Changed(Enum):
