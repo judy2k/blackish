@@ -13,7 +13,9 @@
 <a href="https://github.com/judy2k/blackish"><img alt="Code style: blackish" src="https://img.shields.io/badge/code%20style-blackish-000000.svg"></a>
 </p>
 
-> “Any color you like.”
+> “Any color you like...ish”
+
+This was all [Chris Rose](https://github.com/offbyone)'s idea.
 
 _Blackish_ is the uncompromising Python code formatter. By using it, you agree to cede
 control over minutiae of hand-formatting. In return, _Blackish_ gives you speed,
