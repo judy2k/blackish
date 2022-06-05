@@ -1,16 +1,16 @@
-- id: black
-  name: black
-  description: "Black: The uncompromising Python code formatter"
-  entry: black
+- id: blackish
+  name: blackish
+  description: "blackish: The uncompromising Python code formatter"
+  entry: blackish
   language: python
   minimum_pre_commit_version: 2.9.2
   require_serial: true
   types_or: [python, pyi]
-- id: black-jupyter
-  name: black-jupyter
+- id: blackish-jupyter
+  name: blackish-jupyter
   description:
-    "Black: The uncompromising Python code formatter (with Jupyter Notebook support)"
-  entry: black
+    "blackish: The uncompromising Python code formatter (with Jupyter Notebook support)"
+  entry: blackish
   language: python
   minimum_pre_commit_version: 2.9.2
   require_serial: true

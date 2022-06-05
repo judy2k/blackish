@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed the name of the project to blackish
+
 ### Highlights
 
 <!-- Include any especially major or disruptive changes here -->

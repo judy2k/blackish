@@ -4,10 +4,10 @@ exclude: ^(src/blib2to3/|profiling/|tests/data/)
 repos:
   - repo: local
     hooks:
-      - id: black
-        name: black
+      - id: blackish
+        name: blackish
         language: system
-        entry: black
+        entry: blackish
         minimum_pre_commit_version: 2.9.2
         require_serial: true
         types_or: [python, pyi]
@@ -25,7 +25,7 @@ repos:
           ]
 
       - id: check-version-in-the-basics-example
-        name: Check black version in the basics example
+        name: Check blackish version in the basics example
         language: python
         entry: python -m scripts.check_version_in_basics_example
         files: '(CHANGES\.md|the_basics\.md)$'

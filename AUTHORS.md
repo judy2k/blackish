@@ -1,6 +1,7 @@
 # Authors
 
 Glued together by [Łukasz Langa](mailto:lukasz@langa.pl).
+With additional monstrous changes by [Mark Smith](mailto:judy@judy.co.uk)
 
 Maintained with:
 
