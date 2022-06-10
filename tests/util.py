@@ -6,10 +6,10 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Iterator, List, Optional, Tuple
 
-import blackish
-from blackish.debug import DebugVisitor
-from blackish.mode import TargetVersion
-from blackish.output import diff, err, out
+import grey
+from grey.debug import DebugVisitor
+from grey.mode import TargetVersion
+from grey.output import diff, err, out
 
 PYTHON_SUFFIX = ".py"
 ALLOWED_SUFFIXES = (PYTHON_SUFFIX, ".pyi", ".out", ".diff", ".ipynb")
@@ -27,9 +27,9 @@ PY36_VERSIONS = {
     TargetVersion.PY39,
 }
 
-DEFAULT_MODE = blackish.Mode()
-ff = partial(blackish.format_file_in_place, mode=DEFAULT_MODE, fast=True)
-fs = partial(blackish.format_str, mode=DEFAULT_MODE)
+DEFAULT_MODE = grey.Mode()
+ff = partial(grey.format_file_in_place, mode=DEFAULT_MODE, fast=True)
+fs = partial(grey.format_str, mode=DEFAULT_MODE)
 
 
 def _assert_format_equal(expected: str, actual: str) -> None:
@@ -37,14 +37,14 @@ def _assert_format_equal(expected: str, actual: str) -> None:
         bdv: DebugVisitor[Any]
         out("Expected tree:", fg="green")
         try:
-            exp_node = blackish.lib2to3_parse(expected)
+            exp_node = grey.lib2to3_parse(expected)
             bdv = DebugVisitor()
             list(bdv.visit(exp_node))
         except Exception as ve:
             err(str(ve))
         out("Actual tree:", fg="red")
         try:
-            exp_node = blackish.lib2to3_parse(actual)
+            exp_node = grey.lib2to3_parse(actual)
             bdv = DebugVisitor()
             list(bdv.visit(exp_node))
         except Exception as ve:
@@ -59,7 +59,7 @@ def _assert_format_equal(expected: str, actual: str) -> None:
 def assert_format(
     source: str,
     expected: str,
-    mode: blackish.Mode = DEFAULT_MODE,
+    mode: grey.Mode = DEFAULT_MODE,
     *,
     fast: bool = False,
     minimum_version: Optional[Tuple[int, int]] = None,
@@ -70,7 +70,7 @@ def assert_format(
     safety guards so they don't just crash with a SyntaxError. Please note this is
     separate from TargetVerson Mode configuration.
     """
-    actual = blackish.format_str(source, mode=mode)
+    actual = grey.format_str(source, mode=mode)
     _assert_format_equal(expected, actual)
     # It's not useful to run safety checks if we're expecting no changes anyway. The
     # assertion right above will raise if reality does actually make changes. This just
@@ -80,8 +80,8 @@ def assert_format(
         # being able to parse the code being formatted. This doesn't always work out
         # when checking modern code on older versions.
         if minimum_version is None or sys.version_info >= minimum_version:
-            blackish.assert_equivalent(source, actual)
-        blackish.assert_stable(source, actual, mode=mode)
+            grey.assert_equivalent(source, actual)
+        grey.assert_stable(source, actual, mode=mode)
 
 
 def dump_to_stderr(*output: str) -> str:

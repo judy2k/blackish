@@ -30,8 +30,8 @@ from blib2to3.pytree import Node, Leaf, type_repr, NL
 from blib2to3 import pygram
 from blib2to3.pgen2 import token
 
-from blackish.cache import CACHE_DIR
-from blackish.strings import has_triple_quotes
+from grey.cache import CACHE_DIR
+from grey.strings import has_triple_quotes
 
 
 pygram.initialize(CACHE_DIR)

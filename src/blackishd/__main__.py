@@ -1,3 +1,3 @@
-import blackishd
+import greyd
 
-blackishd.patched_main()
+greyd.patched_main()

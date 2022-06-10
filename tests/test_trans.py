@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from blackish.trans import iter_fexpr_spans
+from grey.trans import iter_fexpr_spans
 
 
 def test_fexpr_spans() -> None:
@@ -20,7 +20,7 @@ def test_fexpr_spans() -> None:
     # Most of these test cases omit the leading 'f' and leading / closing quotes
     # for convenience
     # Some additional property-based tests can be found in
-    # https://github.com/psf/blackish/pull/2654#issuecomment-981411748
+    # https://github.com/psf/grey/pull/2654#issuecomment-981411748
     check("""{var}""", [(0, 5)], ["{var}"])
     check("""f'{var}'""", [(2, 7)], ["{var}"])
     check("""f'{1 + f() + 2 + "asdf"}'""", [(2, 24)], ["""{1 + f() + 2 + "asdf"}"""])

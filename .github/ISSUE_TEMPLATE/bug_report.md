@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve Blackish's quality
+about: Create a report to help us improve grey's quality
 title: ""
 labels: "T: bug"
 assignees: ""
@@ -10,8 +10,8 @@ assignees: ""
 Please make sure that the bug is not already fixed either in newer versions or the
 current development version. To confirm this, you have three options:
 
-1. Update Black's version if a newer release exists: `pip install -U blackish`
-2. Use the online formatter at <https://blackish.vercel.app/?version=main>, which will use
+1. Update Black's version if a newer release exists: `pip install -U grey`
+2. Use the online formatter at <https://grey.vercel.app/?version=main>, which will use
    the latest main branch.
 3. Or run _Black_ on your machine:
    - create a new virtualenv (make sure it's the same Python version);
@@ -19,7 +19,7 @@ current development version. To confirm this, you have three options:
    - run `pip install -e .[d]`;
    - run `pip install -r test_requirements.txt`
    - make sure it's sane by running `python -m pytest`; and
-   - run `blackish` like you did last time.
+   - run `grey` like you did last time.
 -->
 
 **Describe the bug**
@@ -41,7 +41,7 @@ this = "code"
 And run it with these arguments:
 
 ```sh
-$ blackish file.py --target-version py39
+$ grey file.py --target-version py39
 ```
 
 The resulting error is:

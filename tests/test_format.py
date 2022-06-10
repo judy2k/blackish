@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-import blackish
+import grey
 from tests.util import (
     DEFAULT_MODE,
     PY36_VERSIONS,
@@ -15,27 +15,27 @@ from tests.util import (
 )
 
 SOURCES: List[str] = [
-    "src/blackish/__init__.py",
-    "src/blackish/__main__.py",
-    "src/blackish/brackets.py",
-    "src/blackish/cache.py",
-    "src/blackish/comments.py",
-    "src/blackish/concurrency.py",
-    "src/blackish/const.py",
-    "src/blackish/debug.py",
-    "src/blackish/files.py",
-    "src/blackish/linegen.py",
-    "src/blackish/lines.py",
-    "src/blackish/mode.py",
-    "src/blackish/nodes.py",
-    "src/blackish/numerics.py",
-    "src/blackish/output.py",
-    "src/blackish/parsing.py",
-    "src/blackish/report.py",
-    "src/blackish/rusty.py",
-    "src/blackish/strings.py",
-    "src/blackish/trans.py",
-    "src/blackishd/__init__.py",
+    "src/grey/__init__.py",
+    "src/grey/__main__.py",
+    "src/grey/brackets.py",
+    "src/grey/cache.py",
+    "src/grey/comments.py",
+    "src/grey/concurrency.py",
+    "src/grey/const.py",
+    "src/grey/debug.py",
+    "src/grey/files.py",
+    "src/grey/linegen.py",
+    "src/grey/lines.py",
+    "src/grey/mode.py",
+    "src/grey/nodes.py",
+    "src/grey/numerics.py",
+    "src/grey/output.py",
+    "src/grey/parsing.py",
+    "src/grey/report.py",
+    "src/grey/rusty.py",
+    "src/grey/strings.py",
+    "src/grey/trans.py",
+    "src/greyd/__init__.py",
     "src/blib2to3/pygram.py",
     "src/blib2to3/pytree.py",
     "src/blib2to3/pgen2/conv.py",
@@ -47,8 +47,8 @@ SOURCES: List[str] = [
     "src/blib2to3/pgen2/tokenize.py",
     "src/blib2to3/pgen2/token.py",
     "setup.py",
-    "tests/test_blackish.py",
-    "tests/test_blackishd.py",
+    "tests/test_grey.py",
+    "tests/test_greyd.py",
     "tests/test_format.py",
     "tests/optional.py",
     "tests/util.py",
@@ -58,12 +58,12 @@ SOURCES: List[str] = [
 
 @pytest.fixture(autouse=True)
 def patch_dump_to_file(request: Any) -> Iterator[None]:
-    with patch("blackish.dump_to_file", dump_to_stderr):
+    with patch("grey.dump_to_file", dump_to_stderr):
         yield
 
 
 def check_file(
-    subdir: str, filename: str, mode: blackish.Mode, *, data: bool = True
+    subdir: str, filename: str, mode: grey.Mode, *, data: bool = True
 ) -> None:
     source, expected = read_data(subdir, filename, data=data)
     assert_format(source, expected, mode, fast=False)
@@ -76,13 +76,13 @@ def test_simple_format(filename: str) -> None:
 
 @pytest.mark.parametrize("filename", all_data_cases("preview"))
 def test_preview_format(filename: str) -> None:
-    check_file("preview", filename, blackish.Mode(preview=True))
+    check_file("preview", filename, grey.Mode(preview=True))
 
 
 @pytest.mark.parametrize("filename", all_data_cases("preview_39"))
 def test_preview_minimum_python_39_format(filename: str) -> None:
     source, expected = read_data("preview_39", filename)
-    mode = blackish.Mode(preview=True)
+    mode = grey.Mode(preview=True)
     assert_format(source, expected, mode, minimum_version=(3, 9))
 
 
@@ -104,49 +104,49 @@ def test_empty() -> None:
 @pytest.mark.parametrize("filename", all_data_cases("py_36"))
 def test_python_36(filename: str) -> None:
     source, expected = read_data("py_36", filename)
-    mode = blackish.Mode(target_versions=PY36_VERSIONS)
+    mode = grey.Mode(target_versions=PY36_VERSIONS)
     assert_format(source, expected, mode, minimum_version=(3, 6))
 
 
 @pytest.mark.parametrize("filename", all_data_cases("py_37"))
 def test_python_37(filename: str) -> None:
     source, expected = read_data("py_37", filename)
-    mode = blackish.Mode(target_versions={blackish.TargetVersion.PY37})
+    mode = grey.Mode(target_versions={grey.TargetVersion.PY37})
     assert_format(source, expected, mode, minimum_version=(3, 7))
 
 
 @pytest.mark.parametrize("filename", all_data_cases("py_38"))
 def test_python_38(filename: str) -> None:
     source, expected = read_data("py_38", filename)
-    mode = blackish.Mode(target_versions={blackish.TargetVersion.PY38})
+    mode = grey.Mode(target_versions={grey.TargetVersion.PY38})
     assert_format(source, expected, mode, minimum_version=(3, 8))
 
 
 @pytest.mark.parametrize("filename", all_data_cases("py_39"))
 def test_python_39(filename: str) -> None:
     source, expected = read_data("py_39", filename)
-    mode = blackish.Mode(target_versions={blackish.TargetVersion.PY39})
+    mode = grey.Mode(target_versions={grey.TargetVersion.PY39})
     assert_format(source, expected, mode, minimum_version=(3, 9))
 
 
 @pytest.mark.parametrize("filename", all_data_cases("py_310"))
 def test_python_310(filename: str) -> None:
     source, expected = read_data("py_310", filename)
-    mode = blackish.Mode(target_versions={blackish.TargetVersion.PY310})
+    mode = grey.Mode(target_versions={grey.TargetVersion.PY310})
     assert_format(source, expected, mode, minimum_version=(3, 10))
 
 
 @pytest.mark.parametrize("filename", all_data_cases("py_310"))
 def test_python_310_without_target_version(filename: str) -> None:
     source, expected = read_data("py_310", filename)
-    mode = blackish.Mode()
+    mode = grey.Mode()
     assert_format(source, expected, mode, minimum_version=(3, 10))
 
 
 def test_patma_invalid() -> None:
     source, expected = read_data("miscellaneous", "pattern_matching_invalid")
-    mode = blackish.Mode(target_versions={blackish.TargetVersion.PY310})
-    with pytest.raises(blackish.parsing.InvalidInput) as exc_info:
+    mode = grey.Mode(target_versions={grey.TargetVersion.PY310})
+    with pytest.raises(grey.parsing.InvalidInput) as exc_info:
         assert_format(source, expected, mode, minimum_version=(3, 10))
 
     exc_info.match("Cannot parse: 10:11")
@@ -155,7 +155,7 @@ def test_patma_invalid() -> None:
 @pytest.mark.parametrize("filename", all_data_cases("py_311"))
 def test_python_311(filename: str) -> None:
     source, expected = read_data("py_311", filename)
-    mode = blackish.Mode(target_versions={blackish.TargetVersion.PY311})
+    mode = grey.Mode(target_versions={grey.TargetVersion.PY311})
     assert_format(source, expected, mode, minimum_version=(3, 11))
 
 
@@ -166,9 +166,9 @@ def test_fast_cases(filename: str) -> None:
 
 
 def test_python_2_hint() -> None:
-    with pytest.raises(blackish.parsing.InvalidInput) as exc_info:
+    with pytest.raises(grey.parsing.InvalidInput) as exc_info:
         assert_format("print 'daylily'", "print 'daylily'")
-    exc_info.match(blackish.parsing.PY2_HINT)
+    exc_info.match(grey.parsing.PY2_HINT)
 
 
 def test_docstring_no_string_normalization() -> None:
@@ -194,4 +194,4 @@ def test_stub() -> None:
 def test_power_op_newline() -> None:
     # requires line_length=0
     source, expected = read_data("miscellaneous", "power_op_newline")
-    assert_format(source, expected, mode=blackish.Mode(line_length=0))
+    assert_format(source, expected, mode=grey.Mode(line_length=0))

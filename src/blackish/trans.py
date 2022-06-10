@@ -30,17 +30,17 @@ else:
 
 from mypy_extensions import trait
 
-from blackish.rusty import Result, Ok, Err
+from grey.rusty import Result, Ok, Err
 
-from blackish.mode import Feature
-from blackish.nodes import syms, replace_child, parent_type
-from blackish.nodes import is_empty_par, is_empty_lpar, is_empty_rpar
-from blackish.nodes import OPENING_BRACKETS, CLOSING_BRACKETS, STANDALONE_COMMENT
-from blackish.lines import Line, append_leaves
-from blackish.brackets import BracketMatchError
-from blackish.comments import contains_pragma_comment
-from blackish.strings import has_triple_quotes, get_string_prefix, assert_is_leaf_string
-from blackish.strings import normalize_string_quotes
+from grey.mode import Feature
+from grey.nodes import syms, replace_child, parent_type
+from grey.nodes import is_empty_par, is_empty_lpar, is_empty_rpar
+from grey.nodes import OPENING_BRACKETS, CLOSING_BRACKETS, STANDALONE_COMMENT
+from grey.lines import Line, append_leaves
+from grey.brackets import BracketMatchError
+from grey.comments import contains_pragma_comment
+from grey.strings import has_triple_quotes, get_string_prefix, assert_is_leaf_string
+from grey.strings import normalize_string_quotes
 
 from blib2to3.pytree import Leaf, Node
 from blib2to3.pgen2 import token
@@ -822,7 +822,7 @@ class BaseStringSplitter(StringTransformer):
 
     Requirements:
         * The target string value is responsible for the line going over the
-        line length limit. It follows that after all of blackish's other line
+        line length limit. It follows that after all of grey's other line
         split methods have been exhausted, this line (or one of the resulting
         lines after all line splits are performed) would still be over the
         line_length limit unless we split this string.

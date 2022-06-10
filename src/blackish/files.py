@@ -30,9 +30,9 @@ if sys.version_info >= (3, 11):
 else:
     import tomli as tomllib
 
-from blackish.output import err
-from blackish.report import Report
-from blackish.handle_ipynb_magics import jupyter_dependencies_are_installed
+from grey.output import err
+from grey.report import Report
+from grey.handle_ipynb_magics import jupyter_dependencies_are_installed
 
 if TYPE_CHECKING:
     import colorama  # noqa: F401
@@ -109,15 +109,15 @@ def parse_pyproject_toml(path_config: str) -> Dict[str, Any]:
     """
     with open(path_config, "rb") as f:
         pyproject_toml = tomllib.load(f)
-    config = pyproject_toml.get("tool", {}).get("blackish", {})
+    config = pyproject_toml.get("tool", {}).get("grey", {})
     return {k.replace("--", "").replace("-", "_"): v for k, v in config.items()}
 
 
 @lru_cache()
 def find_user_pyproject_toml() -> Path:
-    r"""Return the path to the top-level user configuration for blackish.
+    r"""Return the path to the top-level user configuration for grey.
 
-    This looks for ~\.blackish on Windows and ~/.config/blackish on Linux and other
+    This looks for ~\.grey on Windows and ~/.config/grey on Linux and other
     Unix systems.
 
     May raise:
@@ -126,10 +126,10 @@ def find_user_pyproject_toml() -> Path:
     """
     if sys.platform == "win32":
         # Windows
-        user_config_path = Path.home() / ".blackish"
+        user_config_path = Path.home() / ".grey"
     else:
         config_root = os.environ.get("XDG_CONFIG_HOME", "~/.config")
-        user_config_path = Path(config_root).expanduser() / "blackish"
+        user_config_path = Path(config_root).expanduser() / "grey"
     return user_config_path.resolve()
 
 

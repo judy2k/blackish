@@ -54,9 +54,9 @@ jobs:
         # If pushed / is a pull request against main repo AND
         # we're running on Linux (this action only supports Linux)
         if:
-          ((github.event_name == 'push' && github.repository == 'judy2k/blackish') ||
-          github.event.pull_request.base.repo.full_name == 'judy2k/blackish') && matrix.os ==
-          'ubuntu-latest'
+          ((github.event_name == 'push' && github.repository == 'judy2k/grey') ||
+          github.event.pull_request.base.repo.full_name == 'judy2k/grey') && matrix.os
+          == 'ubuntu-latest'
 
         uses: AndreMiras/coveralls-python-action@v20201129
         with:
@@ -69,8 +69,8 @@ jobs:
     needs: build
     # If pushed / is a pull request against main repo
     if:
-      (github.event_name == 'push' && github.repository == 'judy2k/blackish') ||
-      github.event.pull_request.base.repo.full_name == 'judy2k/blackish'
+      (github.event_name == 'push' && github.repository == 'judy2k/grey') ||
+      github.event.pull_request.base.repo.full_name == 'judy2k/grey'
 
     runs-on: ubuntu-latest
     steps:

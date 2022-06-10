@@ -32,7 +32,7 @@ build-backend = "setuptools.build_meta"
 [tool.pytest.ini_options]
 # Option below requires `tests/optional.py`
 optional-tests = [
-  "no_blackishd: run when `d` extra NOT installed",
+  "no_greyd: run when `d` extra NOT installed",
   "no_jupyter: run when `jupyter` extra NOT installed",
 ]
 markers = [
