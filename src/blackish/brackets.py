@@ -12,9 +12,9 @@ else:
 from blib2to3.pytree import Leaf, Node
 from blib2to3.pgen2 import token
 
-from blackish.nodes import syms, is_vararg, VARARGS_PARENTS, UNPACKING_PARENTS
-from blackish.nodes import BRACKET, OPENING_BRACKETS, CLOSING_BRACKETS
-from blackish.nodes import MATH_OPERATORS, COMPARATORS, LOGIC_OPERATORS
+from grey.nodes import syms, is_vararg, VARARGS_PARENTS, UNPACKING_PARENTS
+from grey.nodes import BRACKET, OPENING_BRACKETS, CLOSING_BRACKETS
+from grey.nodes import MATH_OPERATORS, COMPARATORS, LOGIC_OPERATORS
 
 # types
 LN = Union[Leaf, Node]

@@ -1,12 +1,12 @@
 Metadata-Version: 2.1
-Name: blackish
+Name: grey
 Version: 22.6.6.dev0+gf5d3569.d20220605
 Summary: The uncompromising code formatter.
-Home-page: https://github.com/judy2k/blackish
+Home-page: https://github.com/judy2k/grey
 Author: Łukasz Langa
 Author-email: lukasz@langa.pl
 License: MIT
-Project-URL: Changelog, https://github.com/judy2k/blackish/blob/main/CHANGES.md
+Project-URL: Changelog, https://github.com/judy2k/grey/blob/main/CHANGES.md
 Keywords: automation formatter yapf autopep8 pyfmt gofmt rustfmt
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Environment :: Console
@@ -31,39 +31,39 @@ Provides-Extra: jupyter
 License-File: LICENSE
 License-File: AUTHORS.md
 
-![Blackish Logo](https://raw.githubusercontent.com/judy2k/blackish/main/docs/_static/logo2-readme.png)
+![grey Logo](https://raw.githubusercontent.com/judy2k/grey/main/docs/_static/logo2-readme.png)
 
 <h2 align="center">The Uncompromising Code Formatter</h2>
 
 <p align="center">
-<a href="https://github.com/judy2k/blackish/actions"><img alt="Actions Status" src="https://github.com/judy2k/blackish/workflows/Test/badge.svg"></a>
-<a href="https://blackish.readthedocs.io/en/stable/?badge=stable"><img alt="Documentation Status" src="https://readthedocs.org/projects/blackish/badge/?version=stable"></a>
-<a href="https://coveralls.io/github/judy2k/blackish?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/judy2k/blackish/badge.svg?branch=main"></a>
-<a href="https://github.com/judy2k/blackish/blob/main/LICENSE"><img alt="License: MIT" src="https://blackish.readthedocs.io/en/stable/_static/license.svg"></a>
-<a href="https://pypi.org/project/blackish/"><img alt="PyPI" src="https://img.shields.io/judy2k/v/blackish"></a>
-<a href="https://pepy.tech/project/blackish"><img alt="Downloads" src="https://pepy.tech/badge/blackish"></a>
-<a href="https://anaconda.org/conda-forge/blackish/"><img alt="conda-forge" src="https://img.shields.io/conda/dn/conda-forge/blackish.svg?label=conda-forge"></a>
-<a href="https://github.com/judy2k/blackish"><img alt="Code style: blackish" src="https://img.shields.io/badge/code%20style-blackish-000000.svg"></a>
+<a href="https://github.com/judy2k/grey/actions"><img alt="Actions Status" src="https://github.com/judy2k/grey/workflows/Test/badge.svg"></a>
+<a href="https://grey.readthedocs.io/en/stable/?badge=stable"><img alt="Documentation Status" src="https://readthedocs.org/projects/grey/badge/?version=stable"></a>
+<a href="https://coveralls.io/github/judy2k/grey?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/judy2k/grey/badge.svg?branch=main"></a>
+<a href="https://github.com/judy2k/grey/blob/main/LICENSE"><img alt="License: MIT" src="https://grey.readthedocs.io/en/stable/_static/license.svg"></a>
+<a href="https://pypi.org/project/grey/"><img alt="PyPI" src="https://img.shields.io/judy2k/v/grey"></a>
+<a href="https://pepy.tech/project/grey"><img alt="Downloads" src="https://pepy.tech/badge/grey"></a>
+<a href="https://anaconda.org/conda-forge/grey/"><img alt="conda-forge" src="https://img.shields.io/conda/dn/conda-forge/grey.svg?label=conda-forge"></a>
+<a href="https://github.com/judy2k/grey"><img alt="Code style: grey" src="https://img.shields.io/badge/code%20style-grey-000000.svg"></a>
 </p>
 
 > “Any color you like.”
 
-_Blackish_ is the uncompromising Python code formatter. By using it, you agree to cede
-control over minutiae of hand-formatting. In return, _Blackish_ gives you speed,
+_grey_ is the uncompromising Python code formatter. By using it, you agree to cede
+control over minutiae of hand-formatting. In return, _grey_ gives you speed,
 determinism, and freedom from `pycodestyle` nagging about formatting. You will save time
 and mental energy for more important matters.
 
-Blackished code looks the same regardless of the project you're reading. Formatting
+greyed code looks the same regardless of the project you're reading. Formatting
 becomes transparent after a while and you can focus on the content instead.
 
-_Blackish_ makes code review faster by producing the smallest diffs possible.
+_grey_ makes code review faster by producing the smallest diffs possible.
 
-Try it out now using the [Blackish Playground](https://blackish.vercel.app). Watch the
+Try it out now using the [grey Playground](https://grey.vercel.app). Watch the
 [PyCon 2019 talk](https://youtu.be/esZLCuWs_2Y) to learn more.
 
 ---
 
-**[Read the documentation on ReadTheDocs!](https://blackish.readthedocs.io/en/stable)**
+**[Read the documentation on ReadTheDocs!](https://grey.readthedocs.io/en/stable)**
 
 ---
 
@@ -71,44 +71,44 @@ Try it out now using the [Blackish Playground](https://blackish.vercel.app). Wat
 
 ### Installation
 
-_Blackish_ can be installed by running `pip install blackish`. It requires Python 3.6.2+ to
+_grey_ can be installed by running `pip install grey`. It requires Python 3.6.2+ to
 run. If you want to format Jupyter Notebooks, install with
-`pip install 'blackish[jupyter]'`.
+`pip install 'grey[jupyter]'`.
 
 If you can't wait for the latest _hotness_ and want to install from GitHub, use:
 
-`pip install git+https://github.com/judy2k/blackish`
+`pip install git+https://github.com/judy2k/grey`
 
 ### Usage
 
 To get started right away with sensible defaults:
 
 ```sh
-blackish {source_file_or_directory}
+grey {source_file_or_directory}
 ```
 
-You can run _Blackish_ as a package if running it as a script doesn't work:
+You can run _grey_ as a package if running it as a script doesn't work:
 
 ```sh
-python -m blackish {source_file_or_directory}
+python -m grey {source_file_or_directory}
 ```
 
 Further information can be found in our docs:
 
-- [Usage and Configuration](https://blackish.readthedocs.io/en/stable/usage_and_configuration/index.html)
+- [Usage and Configuration](https://grey.readthedocs.io/en/stable/usage_and_configuration/index.html)
 
-_Blackish_ is already [successfully used](https://github.com/judy2k/blackish#used-by) by many
+_grey_ is already [successfully used](https://github.com/judy2k/grey#used-by) by many
 projects, small and big. _Black_ has a comprehensive test suite, with efficient parallel
 tests, and our own auto formatting and parallel Continuous Integration runner. Now that
 we have become stable, you should not expect large formatting to changes in the future.
 Stylistic changes will mostly be responses to bug reports and support for new Python
 syntax. For more information please refer to the
-[The Black Code Style](https://blackish.readthedocs.io/en/stable/the_blackish_code_style/index.html).
+[The Black Code Style](https://grey.readthedocs.io/en/stable/the_grey_code_style/index.html).
 
 Also, as a safety measure which slows down processing, _Black_ will check that the
 reformatted code still produces a valid AST that is effectively equivalent to the
 original (see the
-[Pragmatism](https://blackish.readthedocs.io/en/stable/the_blackish_code_style/current_style.html#ast-before-and-after-formatting)
+[Pragmatism](https://grey.readthedocs.io/en/stable/the_grey_code_style/current_style.html#ast-before-and-after-formatting)
 section for details). If you're feeling confident, use `--fast`.
 
 ## The _Black_ code style
@@ -116,18 +116,18 @@ section for details). If you're feeling confident, use `--fast`.
 _Black_ is a PEP 8 compliant opinionated formatter. _Black_ reformats entire files in
 place. Style configuration options are deliberately limited and rarely added. It doesn't
 take previous formatting into account (see
-[Pragmatism](https://blackish.readthedocs.io/en/stable/the_blackish_code_style/current_style.html#pragmatism)
+[Pragmatism](https://grey.readthedocs.io/en/stable/the_grey_code_style/current_style.html#pragmatism)
 for exceptions).
 
 Our documentation covers the current _Black_ code style, but planned changes to it are
 also documented. They're both worth taking a look:
 
-- [The _Black_ Code Style: Current style](https://blackish.readthedocs.io/en/stable/the_blackish_code_style/current_style.html)
-- [The _Black_ Code Style: Future style](https://blackish.readthedocs.io/en/stable/the_blackish_code_style/future_style.html)
+- [The _Black_ Code Style: Current style](https://grey.readthedocs.io/en/stable/the_grey_code_style/current_style.html)
+- [The _Black_ Code Style: Future style](https://grey.readthedocs.io/en/stable/the_grey_code_style/future_style.html)
 
 Changes to the _Black_ code style are bound by the Stability Policy:
 
-- [The _Black_ Code Style: Stability Policy](https://blackish.readthedocs.io/en/stable/the_blackish_code_style/index.html#stability-policy)
+- [The _Black_ Code Style: Stability Policy](https://grey.readthedocs.io/en/stable/the_grey_code_style/index.html#stability-policy)
 
 Please refer to this document before submitting an issue. What seems like a bug might be
 intended behaviour.
@@ -139,7 +139,7 @@ initial author. This was fine at the time as it made the implementation simpler 
 there were not many users anyway. Not many edge cases were reported. As a mature tool,
 _Black_ does make some exceptions to rules it otherwise holds.
 
-- [The _Black_ code style: Pragmatism](https://blackish.readthedocs.io/en/stable/the_blackish_code_style/current_style.html#pragmatism)
+- [The _Black_ code style: Pragmatism](https://grey.readthedocs.io/en/stable/the_grey_code_style/current_style.html#pragmatism)
 
 Please refer to this document before submitting an issue just like with the document
 above. What seems like a bug might be intended behaviour.
@@ -153,11 +153,11 @@ project.
 
 You can find more details in our documentation:
 
-- [The basics: Configuration via a file](https://blackish.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file)
+- [The basics: Configuration via a file](https://grey.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file)
 
 And if you're looking for more general configuration documentation:
 
-- [Usage and Configuration](https://blackish.readthedocs.io/en/stable/usage_and_configuration/index.html)
+- [Usage and Configuration](https://grey.readthedocs.io/en/stable/usage_and_configuration/index.html)
 
 **Pro-tip**: If you're asking yourself "Do I need to configure anything?" the answer is
 "No". _Black_ is all about sensible defaults. Applying those defaults will have your
@@ -209,18 +209,18 @@ Twisted and CPython:
 Use the badge in your project's README.md:
 
 ```md
-[![Code style: blackish](https://img.shields.io/badge/code%20style-blackish-000000.svg)](https://github.com/judy2k/blackish)
+[![Code style: grey](https://img.shields.io/badge/code%20style-grey-000000.svg)](https://github.com/judy2k/grey)
 ```
 
 Using the badge in README.rst:
 
 ```
-.. image:: https://img.shields.io/badge/code%20style-blackish-000000.svg
-    :target: https://github.com/judy2k/blackish
+.. image:: https://img.shields.io/badge/code%20style-grey-000000.svg
+    :target: https://github.com/judy2k/grey
 ```
 
 Looks like this:
-[![Code style: blackish](https://img.shields.io/badge/code%20style-blackish-000000.svg)](https://github.com/judy2k/blackish)
+[![Code style: grey](https://img.shields.io/badge/code%20style-grey-000000.svg)](https://github.com/judy2k/grey)
 
 ## License
 
@@ -231,19 +231,19 @@ MIT
 Welcome! Happy to see you willing to make the project better. You can get started by
 reading this:
 
-- [Contributing: The basics](https://blackish.readthedocs.io/en/latest/contributing/the_basics.html)
+- [Contributing: The basics](https://grey.readthedocs.io/en/latest/contributing/the_basics.html)
 
 You can also take a look at the rest of the contributing docs or talk with the
 developers:
 
-- [Contributing documentation](https://blackish.readthedocs.io/en/latest/contributing/index.html)
+- [Contributing documentation](https://grey.readthedocs.io/en/latest/contributing/index.html)
 - [Chat on Discord](https://discord.gg/RtVdv86PrH)
 
 ## Change log
 
 The log has become rather long. It moved to its own file.
 
-See [CHANGES](https://blackish.readthedocs.io/en/latest/change_log.html).
+See [CHANGES](https://grey.readthedocs.io/en/latest/change_log.html).
 
 ## Authors
 
@@ -268,7 +268,7 @@ And if you _really_ need to slap somebody, do it with a fish while dancing.
 
 ## Unreleased
 
-- Changed the name of the project to blackish
+- Changed the name of the project to grey
 
 ### Highlights
 

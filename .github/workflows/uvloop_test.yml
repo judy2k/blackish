@@ -45,4 +45,4 @@ jobs:
 
       - name: Format ourselves
         run: |
-          python -m blackish --check src/
+          python -m grey --check src/

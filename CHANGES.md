@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Changed the name of the project to blackish
+- Changed the name of the project to grey
 
 ### Highlights
 

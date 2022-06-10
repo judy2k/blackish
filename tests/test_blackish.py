@@ -36,14 +36,14 @@ from click import unstyle
 from click.testing import CliRunner
 from pathspec import PathSpec
 
-import blackish
-import blackish.files
-from blackish import Feature, TargetVersion
-from blackish import re_compile_maybe_verbose as compile_pattern
-from blackish.cache import get_cache_dir, get_cache_file
-from blackish.debug import DebugVisitor
-from blackish.output import color_diff, diff
-from blackish.report import Report
+import grey
+import grey.files
+from grey import Feature, TargetVersion
+from grey import re_compile_maybe_verbose as compile_pattern
+from grey.cache import get_cache_dir, get_cache_file
+from grey.debug import DebugVisitor
+from grey.output import color_diff, diff
+from grey.report import Report
 
 # Import other test classes
 from tests.util import (
@@ -67,8 +67,8 @@ from tests.util import (
 THIS_FILE = Path(__file__)
 EMPTY_CONFIG = THIS_DIR / "data" / "empty_pyproject.toml"
 PY36_ARGS = [f"--target-version={version.name.lower()}" for version in PY36_VERSIONS]
-DEFAULT_EXCLUDE = blackish.re_compile_maybe_verbose(blackish.const.DEFAULT_EXCLUDES)
-DEFAULT_INCLUDE = blackish.re_compile_maybe_verbose(blackish.const.DEFAULT_INCLUDES)
+DEFAULT_EXCLUDE = grey.re_compile_maybe_verbose(grey.const.DEFAULT_EXCLUDES)
+DEFAULT_INCLUDE = grey.re_compile_maybe_verbose(grey.const.DEFAULT_INCLUDES)
 T = TypeVar("T")
 R = TypeVar("R")
 
@@ -82,7 +82,7 @@ def cache_dir(exists: bool = True) -> Iterator[Path]:
         cache_dir = Path(workspace)
         if not exists:
             cache_dir = cache_dir / "new"
-        with patch("blackish.cache.CACHE_DIR", cache_dir):
+        with patch("grey.cache.CACHE_DIR", cache_dir):
             yield cache_dir
 
 
@@ -127,7 +127,7 @@ def invokeBlack(
     runner = BlackRunner()
     if ignore_config:
         args = ["--verbose", "--config", str(THIS_DIR / "empty.toml"), *args]
-    result = runner.invoke(blackish.main, args, catch_exceptions=False)
+    result = runner.invoke(grey.main, args, catch_exceptions=False)
     assert result.stdout_bytes is not None
     assert result.stderr_bytes is not None
     msg = (
@@ -144,9 +144,9 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_empty_ff(self) -> None:
         expected = ""
-        tmp_file = Path(blackish.dump_to_file())
+        tmp_file = Path(grey.dump_to_file())
         try:
-            self.assertFalse(ff(tmp_file, write_back=blackish.WriteBack.YES))
+            self.assertFalse(ff(tmp_file, write_back=grey.WriteBack.YES))
             with open(tmp_file, encoding="utf8") as f:
                 actual = f.read()
         finally:
@@ -155,19 +155,19 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_experimental_string_processing_warns(self) -> None:
         self.assertWarns(
-            blackish.mode.Deprecated, blackish.Mode, experimental_string_processing=True
+            grey.mode.Deprecated, grey.Mode, experimental_string_processing=True
         )
 
     def test_piping(self) -> None:
         source, expected = read_data_from_file(
-            PROJECT_ROOT / "src/blackish/__init__.py"
+            PROJECT_ROOT / "src/grey/__init__.py"
         )
         result = BlackRunner().invoke(
-            blackish.main,
+            grey.main,
             [
                 "-",
                 "--fast",
-                f"--line-length={blackish.DEFAULT_LINE_LENGTH}",
+                f"--line-length={grey.DEFAULT_LINE_LENGTH}",
                 f"--config={EMPTY_CONFIG}",
             ],
             input=BytesIO(source.encode("utf8")),
@@ -175,8 +175,8 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertEqual(result.exit_code, 0)
         self.assertFormatEqual(expected, result.output)
         if source != result.output:
-            blackish.assert_equivalent(source, result.output)
-            blackish.assert_stable(source, result.output, DEFAULT_MODE)
+            grey.assert_equivalent(source, result.output)
+            grey.assert_stable(source, result.output, DEFAULT_MODE)
 
     def test_piping_diff(self) -> None:
         diff_header = re.compile(
@@ -188,12 +188,12 @@ class BlackTestCase(BlackBaseTestCase):
         args = [
             "-",
             "--fast",
-            f"--line-length={blackish.DEFAULT_LINE_LENGTH}",
+            f"--line-length={grey.DEFAULT_LINE_LENGTH}",
             "--diff",
             f"--config={EMPTY_CONFIG}",
         ]
         result = BlackRunner().invoke(
-            blackish.main, args, input=BytesIO(source.encode("utf8"))
+            grey.main, args, input=BytesIO(source.encode("utf8"))
         )
         self.assertEqual(result.exit_code, 0)
         actual = diff_header.sub(DETERMINISTIC_HEADER, result.output)
@@ -205,13 +205,13 @@ class BlackTestCase(BlackBaseTestCase):
         args = [
             "-",
             "--fast",
-            f"--line-length={blackish.DEFAULT_LINE_LENGTH}",
+            f"--line-length={grey.DEFAULT_LINE_LENGTH}",
             "--diff",
             "--color",
             f"--config={EMPTY_CONFIG}",
         ]
         result = BlackRunner().invoke(
-            blackish.main, args, input=BytesIO(source.encode("utf8"))
+            grey.main, args, input=BytesIO(source.encode("utf8"))
         )
         actual = result.output
         # Again, the contents are checked in a different test, so only look for colors.
@@ -221,54 +221,54 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertIn("\033[31m", actual)
         self.assertIn("\033[0m", actual)
 
-    @patch("blackish.dump_to_file", dump_to_stderr)
+    @patch("grey.dump_to_file", dump_to_stderr)
     def _test_wip(self) -> None:
         source, expected = read_data("miscellaneous", "wip")
         sys.settrace(tracefunc)
         mode = replace(
             DEFAULT_MODE,
             experimental_string_processing=False,
-            target_versions={blackish.TargetVersion.PY38},
+            target_versions={grey.TargetVersion.PY38},
         )
         actual = fs(source, mode=mode)
         sys.settrace(None)
         self.assertFormatEqual(expected, actual)
-        blackish.assert_equivalent(source, actual)
-        blackish.assert_stable(source, actual, blackish.FileMode())
+        grey.assert_equivalent(source, actual)
+        grey.assert_stable(source, actual, grey.FileMode())
 
     def test_pep_572_version_detection(self) -> None:
         source, _ = read_data("py_38", "pep_572")
-        root = blackish.lib2to3_parse(source)
-        features = blackish.get_features_used(root)
-        self.assertIn(blackish.Feature.ASSIGNMENT_EXPRESSIONS, features)
-        versions = blackish.detect_target_versions(root)
-        self.assertIn(blackish.TargetVersion.PY38, versions)
+        root = grey.lib2to3_parse(source)
+        features = grey.get_features_used(root)
+        self.assertIn(grey.Feature.ASSIGNMENT_EXPRESSIONS, features)
+        versions = grey.detect_target_versions(root)
+        self.assertIn(grey.TargetVersion.PY38, versions)
 
     def test_expression_ff(self) -> None:
         source, expected = read_data("simple_cases", "expression.py")
-        tmp_file = Path(blackish.dump_to_file(source))
+        tmp_file = Path(grey.dump_to_file(source))
         try:
-            self.assertTrue(ff(tmp_file, write_back=blackish.WriteBack.YES))
+            self.assertTrue(ff(tmp_file, write_back=grey.WriteBack.YES))
             with open(tmp_file, encoding="utf8") as f:
                 actual = f.read()
         finally:
             os.unlink(tmp_file)
         self.assertFormatEqual(expected, actual)
-        with patch("blackish.dump_to_file", dump_to_stderr):
-            blackish.assert_equivalent(source, actual)
-            blackish.assert_stable(source, actual, DEFAULT_MODE)
+        with patch("grey.dump_to_file", dump_to_stderr):
+            grey.assert_equivalent(source, actual)
+            grey.assert_stable(source, actual, DEFAULT_MODE)
 
     def test_expression_diff(self) -> None:
         source, _ = read_data("simple_cases", "expression.py")
         expected, _ = read_data("simple_cases", "expression.diff")
-        tmp_file = Path(blackish.dump_to_file(source))
+        tmp_file = Path(grey.dump_to_file(source))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
             r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d \+\d\d\d\d"
         )
         try:
             result = BlackRunner().invoke(
-                blackish.main, ["--diff", str(tmp_file), f"--config={EMPTY_CONFIG}"]
+                grey.main, ["--diff", str(tmp_file), f"--config={EMPTY_CONFIG}"]
             )
             self.assertEqual(result.exit_code, 0)
         finally:
@@ -276,7 +276,7 @@ class BlackTestCase(BlackBaseTestCase):
         actual = result.output
         actual = diff_header.sub(DETERMINISTIC_HEADER, actual)
         if expected != actual:
-            dump = blackish.dump_to_file(actual)
+            dump = grey.dump_to_file(actual)
             msg = (
                 "Expected diff isn't equal to the actual. If you made changes to"
                 " expression.py and this is an anticipated difference, overwrite"
@@ -287,10 +287,10 @@ class BlackTestCase(BlackBaseTestCase):
     def test_expression_diff_with_color(self) -> None:
         source, _ = read_data("simple_cases", "expression.py")
         expected, _ = read_data("simple_cases", "expression.diff")
-        tmp_file = Path(blackish.dump_to_file(source))
+        tmp_file = Path(grey.dump_to_file(source))
         try:
             result = BlackRunner().invoke(
-                blackish.main,
+                grey.main,
                 ["--diff", "--color", str(tmp_file), f"--config={EMPTY_CONFIG}"],
             )
         finally:
@@ -306,36 +306,36 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_detect_pos_only_arguments(self) -> None:
         source, _ = read_data("py_38", "pep_570")
-        root = blackish.lib2to3_parse(source)
-        features = blackish.get_features_used(root)
-        self.assertIn(blackish.Feature.POS_ONLY_ARGUMENTS, features)
-        versions = blackish.detect_target_versions(root)
-        self.assertIn(blackish.TargetVersion.PY38, versions)
+        root = grey.lib2to3_parse(source)
+        features = grey.get_features_used(root)
+        self.assertIn(grey.Feature.POS_ONLY_ARGUMENTS, features)
+        versions = grey.detect_target_versions(root)
+        self.assertIn(grey.TargetVersion.PY38, versions)
 
-    @patch("blackish.dump_to_file", dump_to_stderr)
+    @patch("grey.dump_to_file", dump_to_stderr)
     def test_string_quotes(self) -> None:
         source, expected = read_data("miscellaneous", "string_quotes")
-        mode = blackish.Mode(preview=True)
+        mode = grey.Mode(preview=True)
         assert_format(source, expected, mode)
         mode = replace(mode, string_normalization=False)
         not_normalized = fs(source, mode=mode)
         self.assertFormatEqual(source.replace("\\\n", ""), not_normalized)
-        blackish.assert_equivalent(source, not_normalized)
-        blackish.assert_stable(source, not_normalized, mode=mode)
+        grey.assert_equivalent(source, not_normalized)
+        grey.assert_stable(source, not_normalized, mode=mode)
 
     def test_skip_magic_trailing_comma(self) -> None:
         source, _ = read_data("simple_cases", "expression")
         expected, _ = read_data(
             "miscellaneous", "expression_skip_magic_trailing_comma.diff"
         )
-        tmp_file = Path(blackish.dump_to_file(source))
+        tmp_file = Path(grey.dump_to_file(source))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
             r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d \+\d\d\d\d"
         )
         try:
             result = BlackRunner().invoke(
-                blackish.main,
+                grey.main,
                 ["-C", "--diff", str(tmp_file), f"--config={EMPTY_CONFIG}"],
             )
             self.assertEqual(result.exit_code, 0)
@@ -345,7 +345,7 @@ class BlackTestCase(BlackBaseTestCase):
         actual = diff_header.sub(DETERMINISTIC_HEADER, actual)
         actual = actual.rstrip() + "\n"  # the diff output has a trailing space
         if expected != actual:
-            dump = blackish.dump_to_file(actual)
+            dump = grey.dump_to_file(actual)
             msg = (
                 "Expected diff isn't equal to the actual. If you made changes to"
                 " expression.py and this is an anticipated difference, overwrite"
@@ -353,7 +353,7 @@ class BlackTestCase(BlackBaseTestCase):
             )
             self.assertEqual(expected, actual, msg)
 
-    @patch("blackish.dump_to_file", dump_to_stderr)
+    @patch("grey.dump_to_file", dump_to_stderr)
     def test_async_as_identifier(self) -> None:
         source_path = get_case_path("miscellaneous", "async_as_identifier")
         source, expected = read_data_from_file(source_path)
@@ -361,14 +361,14 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertFormatEqual(expected, actual)
         major, minor = sys.version_info[:2]
         if major < 3 or (major <= 3 and minor < 7):
-            blackish.assert_equivalent(source, actual)
-        blackish.assert_stable(source, actual, DEFAULT_MODE)
-        # ensure blackish can parse this when the target is 3.6
+            grey.assert_equivalent(source, actual)
+        grey.assert_stable(source, actual, DEFAULT_MODE)
+        # ensure grey can parse this when the target is 3.6
         self.invokeBlack([str(source_path), "--target-version", "py36"])
         # but not on 3.7, because async/await is no longer an identifier
         self.invokeBlack([str(source_path), "--target-version", "py37"], exit_code=123)
 
-    @patch("blackish.dump_to_file", dump_to_stderr)
+    @patch("grey.dump_to_file", dump_to_stderr)
     def test_python37(self) -> None:
         source_path = get_case_path("py_37", "python37")
         source, expected = read_data_from_file(source_path)
@@ -376,9 +376,9 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertFormatEqual(expected, actual)
         major, minor = sys.version_info[:2]
         if major > 3 or (major == 3 and minor >= 7):
-            blackish.assert_equivalent(source, actual)
-        blackish.assert_stable(source, actual, DEFAULT_MODE)
-        # ensure blackish can parse this when the target is 3.7
+            grey.assert_equivalent(source, actual)
+        grey.assert_stable(source, actual, DEFAULT_MODE)
+        # ensure grey can parse this when the target is 3.7
         self.invokeBlack([str(source_path), "--target-version", "py37"])
         # but not on 3.6, because we use async as a reserved keyword
         self.invokeBlack([str(source_path), "--target-version", "py36"], exit_code=123)
@@ -416,21 +416,21 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("blackish.output._out", out), patch("blackish.output._err", err):
-            report.done(Path("f1"), blackish.Changed.NO)
+        with patch("grey.output._out", out), patch("grey.output._err", err):
+            report.done(Path("f1"), grey.Changed.NO)
             self.assertEqual(len(out_lines), 1)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(out_lines[-1], "f1 already well formatted, good job.")
             self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
             self.assertEqual(report.return_code, 0)
-            report.done(Path("f2"), blackish.Changed.YES)
+            report.done(Path("f2"), grey.Changed.YES)
             self.assertEqual(len(out_lines), 2)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(out_lines[-1], "reformatted f2")
             self.assertEqual(
                 unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
             )
-            report.done(Path("f3"), blackish.Changed.CACHED)
+            report.done(Path("f3"), grey.Changed.CACHED)
             self.assertEqual(len(out_lines), 3)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(
@@ -453,7 +453,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f3"), blackish.Changed.YES)
+            report.done(Path("f3"), grey.Changed.YES)
             self.assertEqual(len(out_lines), 4)
             self.assertEqual(len(err_lines), 1)
             self.assertEqual(out_lines[-1], "reformatted f3")
@@ -483,7 +483,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f4"), blackish.Changed.NO)
+            report.done(Path("f4"), grey.Changed.NO)
             self.assertEqual(len(out_lines), 6)
             self.assertEqual(len(err_lines), 2)
             self.assertEqual(out_lines[-1], "f4 already well formatted, good job.")
@@ -518,19 +518,19 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("blackish.output._out", out), patch("blackish.output._err", err):
-            report.done(Path("f1"), blackish.Changed.NO)
+        with patch("grey.output._out", out), patch("grey.output._err", err):
+            report.done(Path("f1"), grey.Changed.NO)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
             self.assertEqual(report.return_code, 0)
-            report.done(Path("f2"), blackish.Changed.YES)
+            report.done(Path("f2"), grey.Changed.YES)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(
                 unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
             )
-            report.done(Path("f3"), blackish.Changed.CACHED)
+            report.done(Path("f3"), grey.Changed.CACHED)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(
@@ -550,7 +550,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f3"), blackish.Changed.YES)
+            report.done(Path("f3"), grey.Changed.YES)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 1)
             self.assertEqual(
@@ -578,7 +578,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f4"), blackish.Changed.NO)
+            report.done(Path("f4"), grey.Changed.NO)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 2)
             self.assertEqual(
@@ -602,7 +602,7 @@ class BlackTestCase(BlackBaseTestCase):
             )
 
     def test_report_normal(self) -> None:
-        report = blackish.Report()
+        report = grey.Report()
         out_lines = []
         err_lines = []
 
@@ -612,20 +612,20 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("blackish.output._out", out), patch("blackish.output._err", err):
-            report.done(Path("f1"), blackish.Changed.NO)
+        with patch("grey.output._out", out), patch("grey.output._err", err):
+            report.done(Path("f1"), grey.Changed.NO)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
             self.assertEqual(report.return_code, 0)
-            report.done(Path("f2"), blackish.Changed.YES)
+            report.done(Path("f2"), grey.Changed.YES)
             self.assertEqual(len(out_lines), 1)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(out_lines[-1], "reformatted f2")
             self.assertEqual(
                 unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
             )
-            report.done(Path("f3"), blackish.Changed.CACHED)
+            report.done(Path("f3"), grey.Changed.CACHED)
             self.assertEqual(len(out_lines), 1)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(out_lines[-1], "reformatted f2")
@@ -646,7 +646,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f3"), blackish.Changed.YES)
+            report.done(Path("f3"), grey.Changed.YES)
             self.assertEqual(len(out_lines), 2)
             self.assertEqual(len(err_lines), 1)
             self.assertEqual(out_lines[-1], "reformatted f3")
@@ -675,7 +675,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f4"), blackish.Changed.NO)
+            report.done(Path("f4"), grey.Changed.NO)
             self.assertEqual(len(out_lines), 2)
             self.assertEqual(len(err_lines), 2)
             self.assertEqual(
@@ -699,20 +699,20 @@ class BlackTestCase(BlackBaseTestCase):
             )
 
     def test_lib2to3_parse(self) -> None:
-        with self.assertRaises(blackish.InvalidInput):
-            blackish.lib2to3_parse("invalid syntax")
+        with self.assertRaises(grey.InvalidInput):
+            grey.lib2to3_parse("invalid syntax")
 
         straddling = "x + y"
-        blackish.lib2to3_parse(straddling)
-        blackish.lib2to3_parse(straddling, {TargetVersion.PY36})
+        grey.lib2to3_parse(straddling)
+        grey.lib2to3_parse(straddling, {TargetVersion.PY36})
 
         py2_only = "print x"
-        with self.assertRaises(blackish.InvalidInput):
-            blackish.lib2to3_parse(py2_only, {TargetVersion.PY36})
+        with self.assertRaises(grey.InvalidInput):
+            grey.lib2to3_parse(py2_only, {TargetVersion.PY36})
 
         py3_only = "exec(x, end=y)"
-        blackish.lib2to3_parse(py3_only)
-        blackish.lib2to3_parse(py3_only, {TargetVersion.PY36})
+        grey.lib2to3_parse(py3_only)
+        grey.lib2to3_parse(py3_only, {TargetVersion.PY36})
 
     def test_get_features_used_decorator(self) -> None:
         # Test the feature detection of new decorator syntax
@@ -722,11 +722,11 @@ class BlackTestCase(BlackBaseTestCase):
         simples, relaxed = read_data("miscellaneous", "decorators")
         # skip explanation comments at the top of the file
         for simple_test in simples.split("##")[1:]:
-            node = blackish.lib2to3_parse(simple_test)
+            node = grey.lib2to3_parse(simple_test)
             decorator = str(node.children[0].children[0]).strip()
             self.assertNotIn(
                 Feature.RELAXED_DECORATORS,
-                blackish.get_features_used(node),
+                grey.get_features_used(node),
                 msg=(
                     f"decorator '{decorator}' follows python<=3.8 syntax"
                     "but is detected as 3.9+"
@@ -735,11 +735,11 @@ class BlackTestCase(BlackBaseTestCase):
             )
         # skip the '# output' comment at the top of the output part
         for relaxed_test in relaxed.split("##")[1:]:
-            node = blackish.lib2to3_parse(relaxed_test)
+            node = grey.lib2to3_parse(relaxed_test)
             decorator = str(node.children[0].children[0]).strip()
             self.assertIn(
                 Feature.RELAXED_DECORATORS,
-                blackish.get_features_used(node),
+                grey.get_features_used(node),
                 msg=(
                     f"decorator '{decorator}' uses python3.9+ syntax"
                     "but is detected as python<=3.8"
@@ -748,75 +748,75 @@ class BlackTestCase(BlackBaseTestCase):
             )
 
     def test_get_features_used(self) -> None:
-        node = blackish.lib2to3_parse("def f(*, arg): ...\n")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("def f(*, arg,): ...\n")
+        node = grey.lib2to3_parse("def f(*, arg): ...\n")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("def f(*, arg,): ...\n")
         self.assertEqual(
-            blackish.get_features_used(node), {Feature.TRAILING_COMMA_IN_DEF}
+            grey.get_features_used(node), {Feature.TRAILING_COMMA_IN_DEF}
         )
-        node = blackish.lib2to3_parse("f(*arg,)\n")
+        node = grey.lib2to3_parse("f(*arg,)\n")
         self.assertEqual(
-            blackish.get_features_used(node), {Feature.TRAILING_COMMA_IN_CALL}
+            grey.get_features_used(node), {Feature.TRAILING_COMMA_IN_CALL}
         )
-        node = blackish.lib2to3_parse("def f(*, arg): f'string'\n")
-        self.assertEqual(blackish.get_features_used(node), {Feature.F_STRINGS})
-        node = blackish.lib2to3_parse("123_456\n")
+        node = grey.lib2to3_parse("def f(*, arg): f'string'\n")
+        self.assertEqual(grey.get_features_used(node), {Feature.F_STRINGS})
+        node = grey.lib2to3_parse("123_456\n")
         self.assertEqual(
-            blackish.get_features_used(node), {Feature.NUMERIC_UNDERSCORES}
+            grey.get_features_used(node), {Feature.NUMERIC_UNDERSCORES}
         )
-        node = blackish.lib2to3_parse("123456\n")
-        self.assertEqual(blackish.get_features_used(node), set())
+        node = grey.lib2to3_parse("123456\n")
+        self.assertEqual(grey.get_features_used(node), set())
         source, expected = read_data("simple_cases", "function")
-        node = blackish.lib2to3_parse(source)
+        node = grey.lib2to3_parse(source)
         expected_features = {
             Feature.TRAILING_COMMA_IN_CALL,
             Feature.TRAILING_COMMA_IN_DEF,
             Feature.F_STRINGS,
         }
-        self.assertEqual(blackish.get_features_used(node), expected_features)
-        node = blackish.lib2to3_parse(expected)
-        self.assertEqual(blackish.get_features_used(node), expected_features)
+        self.assertEqual(grey.get_features_used(node), expected_features)
+        node = grey.lib2to3_parse(expected)
+        self.assertEqual(grey.get_features_used(node), expected_features)
         source, expected = read_data("simple_cases", "expression")
-        node = blackish.lib2to3_parse(source)
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse(expected)
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("lambda a, /, b: ...")
-        self.assertEqual(blackish.get_features_used(node), {Feature.POS_ONLY_ARGUMENTS})
-        node = blackish.lib2to3_parse("def fn(a, /, b): ...")
-        self.assertEqual(blackish.get_features_used(node), {Feature.POS_ONLY_ARGUMENTS})
-        node = blackish.lib2to3_parse("def fn(): yield a, b")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("def fn(): return a, b")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("def fn(): yield *b, c")
-        self.assertEqual(blackish.get_features_used(node), {Feature.UNPACKING_ON_FLOW})
-        node = blackish.lib2to3_parse("def fn(): return a, *b, c")
-        self.assertEqual(blackish.get_features_used(node), {Feature.UNPACKING_ON_FLOW})
-        node = blackish.lib2to3_parse("x = a, *b, c")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("x: Any = regular")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("x: Any = (regular, regular)")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("x: Any = Complex(Type(1))[something]")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("x: Tuple[int, ...] = a, b, c")
+        node = grey.lib2to3_parse(source)
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse(expected)
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("lambda a, /, b: ...")
+        self.assertEqual(grey.get_features_used(node), {Feature.POS_ONLY_ARGUMENTS})
+        node = grey.lib2to3_parse("def fn(a, /, b): ...")
+        self.assertEqual(grey.get_features_used(node), {Feature.POS_ONLY_ARGUMENTS})
+        node = grey.lib2to3_parse("def fn(): yield a, b")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("def fn(): return a, b")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("def fn(): yield *b, c")
+        self.assertEqual(grey.get_features_used(node), {Feature.UNPACKING_ON_FLOW})
+        node = grey.lib2to3_parse("def fn(): return a, *b, c")
+        self.assertEqual(grey.get_features_used(node), {Feature.UNPACKING_ON_FLOW})
+        node = grey.lib2to3_parse("x = a, *b, c")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("x: Any = regular")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("x: Any = (regular, regular)")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("x: Any = Complex(Type(1))[something]")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("x: Tuple[int, ...] = a, b, c")
         self.assertEqual(
-            blackish.get_features_used(node), {Feature.ANN_ASSIGN_EXTENDED_RHS}
+            grey.get_features_used(node), {Feature.ANN_ASSIGN_EXTENDED_RHS}
         )
-        node = blackish.lib2to3_parse("try: pass\nexcept Something: pass")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("try: pass\nexcept (*Something,): pass")
-        self.assertEqual(blackish.get_features_used(node), set())
-        node = blackish.lib2to3_parse("try: pass\nexcept *Group: pass")
-        self.assertEqual(blackish.get_features_used(node), {Feature.EXCEPT_STAR})
-        node = blackish.lib2to3_parse("a[*b]")
-        self.assertEqual(blackish.get_features_used(node), {Feature.VARIADIC_GENERICS})
-        node = blackish.lib2to3_parse("a[x, *y(), z] = t")
-        self.assertEqual(blackish.get_features_used(node), {Feature.VARIADIC_GENERICS})
-        node = blackish.lib2to3_parse("def fn(*args: *T): pass")
-        self.assertEqual(blackish.get_features_used(node), {Feature.VARIADIC_GENERICS})
+        node = grey.lib2to3_parse("try: pass\nexcept Something: pass")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("try: pass\nexcept (*Something,): pass")
+        self.assertEqual(grey.get_features_used(node), set())
+        node = grey.lib2to3_parse("try: pass\nexcept *Group: pass")
+        self.assertEqual(grey.get_features_used(node), {Feature.EXCEPT_STAR})
+        node = grey.lib2to3_parse("a[*b]")
+        self.assertEqual(grey.get_features_used(node), {Feature.VARIADIC_GENERICS})
+        node = grey.lib2to3_parse("a[x, *y(), z] = t")
+        self.assertEqual(grey.get_features_used(node), {Feature.VARIADIC_GENERICS})
+        node = grey.lib2to3_parse("def fn(*args: *T): pass")
+        self.assertEqual(grey.get_features_used(node), {Feature.VARIADIC_GENERICS})
 
     def test_get_features_used_for_future_flags(self) -> None:
         for src, features in [
@@ -829,51 +829,51 @@ class BlackTestCase(BlackBaseTestCase):
             ("from __future__ import x, y", set()),
         ]:
             with self.subTest(src=src, features=features):
-                node = blackish.lib2to3_parse(src)
-                future_imports = blackish.get_future_imports(node)
+                node = grey.lib2to3_parse(src)
+                future_imports = grey.get_future_imports(node)
                 self.assertEqual(
-                    blackish.get_features_used(node, future_imports=future_imports),
+                    grey.get_features_used(node, future_imports=future_imports),
                     features,
                 )
 
     def test_get_future_imports(self) -> None:
-        node = blackish.lib2to3_parse("\n")
-        self.assertEqual(set(), blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse("from __future__ import blackish\n")
-        self.assertEqual({"blackish"}, blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse("from __future__ import multiple, imports\n")
-        self.assertEqual({"multiple", "imports"}, blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse(
+        node = grey.lib2to3_parse("\n")
+        self.assertEqual(set(), grey.get_future_imports(node))
+        node = grey.lib2to3_parse("from __future__ import grey\n")
+        self.assertEqual({"grey"}, grey.get_future_imports(node))
+        node = grey.lib2to3_parse("from __future__ import multiple, imports\n")
+        self.assertEqual({"multiple", "imports"}, grey.get_future_imports(node))
+        node = grey.lib2to3_parse(
             "from __future__ import (parenthesized, imports)\n"
         )
         self.assertEqual(
-            {"parenthesized", "imports"}, blackish.get_future_imports(node)
+            {"parenthesized", "imports"}, grey.get_future_imports(node)
         )
-        node = blackish.lib2to3_parse(
+        node = grey.lib2to3_parse(
             "from __future__ import multiple\nfrom __future__ import imports\n"
         )
-        self.assertEqual({"multiple", "imports"}, blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse("# comment\nfrom __future__ import blackish\n")
-        self.assertEqual({"blackish"}, blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse(
-            '"""docstring"""\nfrom __future__ import blackish\n'
+        self.assertEqual({"multiple", "imports"}, grey.get_future_imports(node))
+        node = grey.lib2to3_parse("# comment\nfrom __future__ import grey\n")
+        self.assertEqual({"grey"}, grey.get_future_imports(node))
+        node = grey.lib2to3_parse(
+            '"""docstring"""\nfrom __future__ import grey\n'
         )
-        self.assertEqual({"blackish"}, blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse(
-            "some(other, code)\nfrom __future__ import blackish\n"
+        self.assertEqual({"grey"}, grey.get_future_imports(node))
+        node = grey.lib2to3_parse(
+            "some(other, code)\nfrom __future__ import grey\n"
         )
-        self.assertEqual(set(), blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse("from some.module import blackish\n")
-        self.assertEqual(set(), blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse(
+        self.assertEqual(set(), grey.get_future_imports(node))
+        node = grey.lib2to3_parse("from some.module import grey\n")
+        self.assertEqual(set(), grey.get_future_imports(node))
+        node = grey.lib2to3_parse(
             "from __future__ import unicode_literals as _unicode_literals"
         )
-        self.assertEqual({"unicode_literals"}, blackish.get_future_imports(node))
-        node = blackish.lib2to3_parse(
+        self.assertEqual({"unicode_literals"}, grey.get_future_imports(node))
+        node = grey.lib2to3_parse(
             "from __future__ import unicode_literals as _lol, print"
         )
         self.assertEqual(
-            {"unicode_literals", "print"}, blackish.get_future_imports(node)
+            {"unicode_literals", "print"}, grey.get_future_imports(node)
         )
 
     @pytest.mark.incompatible_with_mypyc
@@ -889,12 +889,12 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("blackish.debug.out", out):
+        with patch("grey.debug.out", out):
             DebugVisitor.show(source)
         actual = "\n".join(out_lines) + "\n"
         log_name = ""
         if expected != actual:
-            log_name = blackish.dump_to_file(*out_lines)
+            log_name = grey.dump_to_file(*out_lines)
         self.assertEqual(
             expected,
             actual,
@@ -904,28 +904,28 @@ class BlackTestCase(BlackBaseTestCase):
     def test_format_file_contents(self) -> None:
         empty = ""
         mode = DEFAULT_MODE
-        with self.assertRaises(blackish.NothingChanged):
-            blackish.format_file_contents(empty, mode=mode, fast=False)
+        with self.assertRaises(grey.NothingChanged):
+            grey.format_file_contents(empty, mode=mode, fast=False)
         just_nl = "\n"
-        with self.assertRaises(blackish.NothingChanged):
-            blackish.format_file_contents(just_nl, mode=mode, fast=False)
+        with self.assertRaises(grey.NothingChanged):
+            grey.format_file_contents(just_nl, mode=mode, fast=False)
         same = "j = [1, 2, 3]\n"
-        with self.assertRaises(blackish.NothingChanged):
-            blackish.format_file_contents(same, mode=mode, fast=False)
+        with self.assertRaises(grey.NothingChanged):
+            grey.format_file_contents(same, mode=mode, fast=False)
         different = "j = [1,2,3]"
         expected = same
-        actual = blackish.format_file_contents(different, mode=mode, fast=False)
+        actual = grey.format_file_contents(different, mode=mode, fast=False)
         self.assertEqual(expected, actual)
         invalid = "return if you can"
-        with self.assertRaises(blackish.InvalidInput) as e:
-            blackish.format_file_contents(invalid, mode=mode, fast=False)
+        with self.assertRaises(grey.InvalidInput) as e:
+            grey.format_file_contents(invalid, mode=mode, fast=False)
         self.assertEqual(str(e.exception), "Cannot parse: 1:7: return if you can")
 
     def test_endmarker(self) -> None:
-        n = blackish.lib2to3_parse("\n")
-        self.assertEqual(n.type, blackish.syms.file_input)
+        n = grey.lib2to3_parse("\n")
+        self.assertEqual(n.type, grey.syms.file_input)
         self.assertEqual(len(n.children), 1)
-        self.assertEqual(n.children[0].type, blackish.token.ENDMARKER)
+        self.assertEqual(n.children[0].type, grey.token.ENDMARKER)
 
     @pytest.mark.incompatible_with_mypyc
     @unittest.skipIf(os.environ.get("SKIP_AST_PRINT"), "user set SKIP_AST_PRINT")
@@ -939,7 +939,7 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("blackish.output._out", out), patch("blackish.output._err", err):
+        with patch("grey.output._out", out), patch("grey.output._err", err):
             with self.assertRaises(AssertionError):
                 self.assertFormatEqual("j = [1, 2, 3]", "j = [1, 2, 3,]")
 
@@ -999,13 +999,13 @@ class BlackTestCase(BlackBaseTestCase):
             with open(path, "r") as fh:
                 actual = fh.read()
             # verify cache with --pyi is separate
-            pyi_cache = blackish.read_cache(pyi_mode)
+            pyi_cache = grey.read_cache(pyi_mode)
             self.assertIn(str(path), pyi_cache)
-            normal_cache = blackish.read_cache(DEFAULT_MODE)
+            normal_cache = grey.read_cache(DEFAULT_MODE)
             self.assertNotIn(str(path), normal_cache)
         self.assertFormatEqual(expected, actual)
-        blackish.assert_equivalent(contents, actual)
-        blackish.assert_stable(contents, actual, pyi_mode)
+        grey.assert_equivalent(contents, actual)
+        grey.assert_stable(contents, actual, pyi_mode)
 
     @event_loop()
     def test_multi_file_force_pyi(self) -> None:
@@ -1026,8 +1026,8 @@ class BlackTestCase(BlackBaseTestCase):
                     actual = fh.read()
                 self.assertEqual(actual, expected)
             # verify cache with --pyi is separate
-            pyi_cache = blackish.read_cache(pyi_mode)
-            normal_cache = blackish.read_cache(reg_mode)
+            pyi_cache = grey.read_cache(pyi_mode)
+            normal_cache = grey.read_cache(reg_mode)
             for path in paths:
                 self.assertIn(str(path), pyi_cache)
                 self.assertNotIn(str(path), normal_cache)
@@ -1035,7 +1035,7 @@ class BlackTestCase(BlackBaseTestCase):
     def test_pipe_force_pyi(self) -> None:
         source, expected = read_data("miscellaneous", "force_pyi")
         result = CliRunner().invoke(
-            blackish.main, ["-", "-q", "--pyi"], input=BytesIO(source.encode("utf8"))
+            grey.main, ["-", "-q", "--pyi"], input=BytesIO(source.encode("utf8"))
         )
         self.assertEqual(result.exit_code, 0)
         actual = result.output
@@ -1053,9 +1053,9 @@ class BlackTestCase(BlackBaseTestCase):
             with open(path, "r") as fh:
                 actual = fh.read()
             # verify cache with --target-version is separate
-            py36_cache = blackish.read_cache(py36_mode)
+            py36_cache = grey.read_cache(py36_mode)
             self.assertIn(str(path), py36_cache)
-            normal_cache = blackish.read_cache(reg_mode)
+            normal_cache = grey.read_cache(reg_mode)
             self.assertNotIn(str(path), normal_cache)
         self.assertEqual(actual, expected)
 
@@ -1078,8 +1078,8 @@ class BlackTestCase(BlackBaseTestCase):
                     actual = fh.read()
                 self.assertEqual(actual, expected)
             # verify cache with --target-version is separate
-            pyi_cache = blackish.read_cache(py36_mode)
-            normal_cache = blackish.read_cache(reg_mode)
+            pyi_cache = grey.read_cache(py36_mode)
+            normal_cache = grey.read_cache(reg_mode)
             for path in paths:
                 self.assertIn(str(path), pyi_cache)
                 self.assertNotIn(str(path), normal_cache)
@@ -1087,7 +1087,7 @@ class BlackTestCase(BlackBaseTestCase):
     def test_pipe_force_py36(self) -> None:
         source, expected = read_data("miscellaneous", "force_py36")
         result = CliRunner().invoke(
-            blackish.main,
+            grey.main,
             ["-", "-q", "--target-version=py36"],
             input=BytesIO(source.encode("utf8")),
         )
@@ -1098,127 +1098,127 @@ class BlackTestCase(BlackBaseTestCase):
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin(self) -> None:
         with patch(
-            "blackish.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: blackish.Changed.YES,
+            "grey.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: grey.Changed.YES,
         ) as fsts:
             report = MagicMock()
             path = Path("-")
-            blackish.reformat_one(
+            grey.reformat_one(
                 path,
                 fast=True,
-                write_back=blackish.WriteBack.YES,
+                write_back=grey.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once()
-            report.done.assert_called_with(path, blackish.Changed.YES)
+            report.done.assert_called_with(path, grey.Changed.YES)
 
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin_filename(self) -> None:
         with patch(
-            "blackish.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: blackish.Changed.YES,
+            "grey.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: grey.Changed.YES,
         ) as fsts:
             report = MagicMock()
             p = "foo.py"
             path = Path(f"__BLACK_STDIN_FILENAME__{p}")
             expected = Path(p)
-            blackish.reformat_one(
+            grey.reformat_one(
                 path,
                 fast=True,
-                write_back=blackish.WriteBack.YES,
+                write_back=grey.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once_with(
-                fast=True, write_back=blackish.WriteBack.YES, mode=DEFAULT_MODE
+                fast=True, write_back=grey.WriteBack.YES, mode=DEFAULT_MODE
             )
             # __BLACK_STDIN_FILENAME__ should have been stripped
-            report.done.assert_called_with(expected, blackish.Changed.YES)
+            report.done.assert_called_with(expected, grey.Changed.YES)
 
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin_filename_pyi(self) -> None:
         with patch(
-            "blackish.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: blackish.Changed.YES,
+            "grey.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: grey.Changed.YES,
         ) as fsts:
             report = MagicMock()
             p = "foo.pyi"
             path = Path(f"__BLACK_STDIN_FILENAME__{p}")
             expected = Path(p)
-            blackish.reformat_one(
+            grey.reformat_one(
                 path,
                 fast=True,
-                write_back=blackish.WriteBack.YES,
+                write_back=grey.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once_with(
                 fast=True,
-                write_back=blackish.WriteBack.YES,
+                write_back=grey.WriteBack.YES,
                 mode=replace(DEFAULT_MODE, is_pyi=True),
             )
             # __BLACK_STDIN_FILENAME__ should have been stripped
-            report.done.assert_called_with(expected, blackish.Changed.YES)
+            report.done.assert_called_with(expected, grey.Changed.YES)
 
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin_filename_ipynb(self) -> None:
         with patch(
-            "blackish.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: blackish.Changed.YES,
+            "grey.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: grey.Changed.YES,
         ) as fsts:
             report = MagicMock()
             p = "foo.ipynb"
             path = Path(f"__BLACK_STDIN_FILENAME__{p}")
             expected = Path(p)
-            blackish.reformat_one(
+            grey.reformat_one(
                 path,
                 fast=True,
-                write_back=blackish.WriteBack.YES,
+                write_back=grey.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once_with(
                 fast=True,
-                write_back=blackish.WriteBack.YES,
+                write_back=grey.WriteBack.YES,
                 mode=replace(DEFAULT_MODE, is_ipynb=True),
             )
             # __BLACK_STDIN_FILENAME__ should have been stripped
-            report.done.assert_called_with(expected, blackish.Changed.YES)
+            report.done.assert_called_with(expected, grey.Changed.YES)
 
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin_and_existing_path(self) -> None:
         with patch(
-            "blackish.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: blackish.Changed.YES,
+            "grey.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: grey.Changed.YES,
         ) as fsts:
             report = MagicMock()
-            # Even with an existing file, since we are forcing stdin, blackish
+            # Even with an existing file, since we are forcing stdin, grey
             # should output to stdout and not modify the file inplace
             p = THIS_DIR / "data" / "simple_cases" / "collections.py"
             # Make sure is_file actually returns True
             self.assertTrue(p.is_file())
             path = Path(f"__BLACK_STDIN_FILENAME__{p}")
             expected = Path(p)
-            blackish.reformat_one(
+            grey.reformat_one(
                 path,
                 fast=True,
-                write_back=blackish.WriteBack.YES,
+                write_back=grey.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once()
             # __BLACK_STDIN_FILENAME__ should have been stripped
-            report.done.assert_called_with(expected, blackish.Changed.YES)
+            report.done.assert_called_with(expected, grey.Changed.YES)
 
     def test_reformat_one_with_stdin_empty(self) -> None:
         output = io.StringIO()
         with patch("io.TextIOWrapper", lambda *args, **kwargs: output):
             try:
-                blackish.format_stdin_to_stdout(
+                grey.format_stdin_to_stdout(
                     fast=True,
                     content="",
-                    write_back=blackish.WriteBack.YES,
+                    write_back=grey.WriteBack.YES,
                     mode=DEFAULT_MODE,
                 )
             except io.UnsupportedOperation:
@@ -1231,14 +1231,14 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_required_version_matches_version(self) -> None:
         self.invokeBlack(
-            ["--required-version", blackish.__version__, "-c", "0"],
+            ["--required-version", grey.__version__, "-c", "0"],
             exit_code=0,
             ignore_config=True,
         )
 
     def test_required_version_matches_partial_version(self) -> None:
         self.invokeBlack(
-            ["--required-version", blackish.__version__.split(".")[0], "-c", "0"],
+            ["--required-version", grey.__version__.split(".")[0], "-c", "0"],
             exit_code=0,
             ignore_config=True,
         )
@@ -1247,7 +1247,7 @@ class BlackTestCase(BlackBaseTestCase):
         self.invokeBlack(
             [
                 "--required-version",
-                blackish.__version__.split(".")[0] + ".999",
+                grey.__version__.split(".")[0] + ".999",
                 "-c",
                 "0",
             ],
@@ -1257,7 +1257,7 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_required_version_does_not_match_version(self) -> None:
         result = BlackRunner().invoke(
-            blackish.main,
+            grey.main,
             ["--required-version", "20.99b", "-c", "0"],
         )
         self.assertEqual(result.exit_code, 1)
@@ -1269,7 +1269,7 @@ class BlackTestCase(BlackBaseTestCase):
             for nl in ["\n", "\r\n"]:
                 contents = nl.join(["def f(  ):", "    pass"])
                 test_file.write_bytes(contents.encode())
-                ff(test_file, write_back=blackish.WriteBack.YES)
+                ff(test_file, write_back=grey.WriteBack.YES)
                 updated_contents: bytes = test_file.read_bytes()
                 self.assertIn(nl.encode(), updated_contents)
                 if nl == "\n":
@@ -1280,7 +1280,7 @@ class BlackTestCase(BlackBaseTestCase):
             contents = nl.join(["def f(  ):", "    pass"])
             runner = BlackRunner()
             result = runner.invoke(
-                blackish.main, ["-", "--fast"], input=BytesIO(contents.encode("utf8"))
+                grey.main, ["-", "--fast"], input=BytesIO(contents.encode("utf8"))
             )
             self.assertEqual(result.exit_code, 0)
             output = result.stdout_bytes
@@ -1290,7 +1290,7 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_assert_equivalent_different_asts(self) -> None:
         with self.assertRaises(AssertionError):
-            blackish.assert_equivalent("{}", "None")
+            grey.assert_equivalent("{}", "None")
 
     def test_shhh_click(self) -> None:
         try:
@@ -1307,7 +1307,7 @@ class BlackTestCase(BlackBaseTestCase):
             with self.assertRaises(RuntimeError):
                 _unicodefun._verify_python_env()
         # Now, let's silence Click...
-        blackish.patch_click()
+        grey.patch_click()
         # ...and confirm it's silent.
         with patch("locale.getpreferredencoding") as gpe:
             gpe.return_value = "ASCII"
@@ -1332,9 +1332,9 @@ class BlackTestCase(BlackBaseTestCase):
             ff(THIS_DIR / "util.py")
 
     def test_invalid_config_return_code(self) -> None:
-        tmp_file = Path(blackish.dump_to_file())
+        tmp_file = Path(grey.dump_to_file())
         try:
-            tmp_config = Path(blackish.dump_to_file())
+            tmp_config = Path(grey.dump_to_file())
             tmp_config.unlink()
             args = ["--config", str(tmp_config), str(tmp_file)]
             self.invokeBlack(args, exit_code=2, ignore_config=False)
@@ -1343,7 +1343,7 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_parse_pyproject_toml(self) -> None:
         test_toml_file = THIS_DIR / "test.toml"
-        config = blackish.parse_pyproject_toml(str(test_toml_file))
+        config = grey.parse_pyproject_toml(str(test_toml_file))
         self.assertEqual(config["verbose"], 1)
         self.assertEqual(config["check"], "no")
         self.assertEqual(config["diff"], "y")
@@ -1357,7 +1357,7 @@ class BlackTestCase(BlackBaseTestCase):
     def test_read_pyproject_toml(self) -> None:
         test_toml_file = THIS_DIR / "test.toml"
         fake_ctx = FakeContext()
-        blackish.read_pyproject_toml(fake_ctx, FakeParameter(), str(test_toml_file))
+        grey.read_pyproject_toml(fake_ctx, FakeParameter(), str(test_toml_file))
         config = fake_ctx.default_map
         self.assertEqual(config["verbose"], "1")
         self.assertEqual(config["check"], "no")
@@ -1386,26 +1386,26 @@ class BlackTestCase(BlackBaseTestCase):
             src_python.touch()
 
             self.assertEqual(
-                blackish.find_project_root((src_dir, test_dir)),
+                grey.find_project_root((src_dir, test_dir)),
                 (root.resolve(), "pyproject.toml"),
             )
             self.assertEqual(
-                blackish.find_project_root((src_dir,)),
+                grey.find_project_root((src_dir,)),
                 (src_dir.resolve(), "pyproject.toml"),
             )
             self.assertEqual(
-                blackish.find_project_root((src_python,)),
+                grey.find_project_root((src_python,)),
                 (src_dir.resolve(), "pyproject.toml"),
             )
 
     @patch(
-        "blackish.files.find_user_pyproject_toml",
+        "grey.files.find_user_pyproject_toml",
     )
     def test_find_pyproject_toml(self, find_user_pyproject_toml: MagicMock) -> None:
         find_user_pyproject_toml.side_effect = RuntimeError()
 
         with redirect_stderr(io.StringIO()) as stderr:
-            result = blackish.files.find_pyproject_toml(
+            result = grey.files.find_pyproject_toml(
                 path_search_start=(str(Path.cwd().root),)
             )
 
@@ -1414,8 +1414,8 @@ class BlackTestCase(BlackBaseTestCase):
         assert "Ignoring user configuration" in err
 
     @patch(
-        "blackish.files.find_user_pyproject_toml",
-        blackish.files.find_user_pyproject_toml.__wrapped__,
+        "grey.files.find_user_pyproject_toml",
+        grey.files.find_user_pyproject_toml.__wrapped__,
     )
     def test_find_user_pyproject_toml_linux(self) -> None:
         if system() == "Windows":
@@ -1423,18 +1423,18 @@ class BlackTestCase(BlackBaseTestCase):
 
         # Test if XDG_CONFIG_HOME is checked
         with TemporaryDirectory() as workspace:
-            tmp_user_config = Path(workspace) / "blackish"
+            tmp_user_config = Path(workspace) / "grey"
             with patch.dict("os.environ", {"XDG_CONFIG_HOME": workspace}):
                 self.assertEqual(
-                    blackish.files.find_user_pyproject_toml(), tmp_user_config.resolve()
+                    grey.files.find_user_pyproject_toml(), tmp_user_config.resolve()
                 )
 
         # Test fallback for XDG_CONFIG_HOME
         with patch.dict("os.environ"):
             os.environ.pop("XDG_CONFIG_HOME", None)
-            fallback_user_config = Path("~/.config").expanduser() / "blackish"
+            fallback_user_config = Path("~/.config").expanduser() / "grey"
             self.assertEqual(
-                blackish.files.find_user_pyproject_toml(),
+                grey.files.find_user_pyproject_toml(),
                 fallback_user_config.resolve(),
             )
 
@@ -1442,9 +1442,9 @@ class BlackTestCase(BlackBaseTestCase):
         if system() != "Windows":
             return
 
-        user_config_path = Path.home() / ".blackish"
+        user_config_path = Path.home() / ".grey"
         self.assertEqual(
-            blackish.files.find_user_pyproject_toml(), user_config_path.resolve()
+            grey.files.find_user_pyproject_toml(), user_config_path.resolve()
         )
 
     def test_bpo_33660_workaround(self) -> None:
@@ -1455,8 +1455,8 @@ class BlackTestCase(BlackBaseTestCase):
         root = Path("/")
         with change_directory(root):
             path = Path("workspace") / "project"
-            report = blackish.Report(verbose=True)
-            normalized_path = blackish.normalize_path_maybe_ignore(path, root, report)
+            report = grey.Report(verbose=True)
+            normalized_path = grey.normalize_path_maybe_ignore(path, root, report)
             self.assertEqual(normalized_path, "workspace/project")
 
     def test_normalize_path_ignore_windows_junctions_outside_of_root(self) -> None:
@@ -1469,8 +1469,8 @@ class BlackTestCase(BlackBaseTestCase):
             junction_target_outside_of_root = root / ".."
             os.system(f"mklink /J {junction_dir} {junction_target_outside_of_root}")
 
-            report = blackish.Report(verbose=True)
-            normalized_path = blackish.normalize_path_maybe_ignore(
+            report = grey.Report(verbose=True)
+            normalized_path = grey.normalize_path_maybe_ignore(
                 junction_dir, root, report
             )
             # Manually delete for Python < 3.8
@@ -1480,8 +1480,8 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_newline_comment_interaction(self) -> None:
         source = "class A:\\\r\n# type: ignore\n pass\n"
-        output = blackish.format_str(source, mode=DEFAULT_MODE)
-        blackish.assert_stable(source, output, mode=DEFAULT_MODE)
+        output = grey.format_str(source, mode=DEFAULT_MODE)
+        grey.assert_stable(source, output, mode=DEFAULT_MODE)
 
     def test_bpo_2142_workaround(self) -> None:
 
@@ -1491,13 +1491,13 @@ class BlackTestCase(BlackBaseTestCase):
         # read_data adds a trailing newline
         source = source.rstrip()
         expected, _ = read_data("miscellaneous", "missing_final_newline.diff")
-        tmp_file = Path(blackish.dump_to_file(source, ensure_final_newline=False))
+        tmp_file = Path(grey.dump_to_file(source, ensure_final_newline=False))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
             r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d \+\d\d\d\d"
         )
         try:
-            result = BlackRunner().invoke(blackish.main, ["--diff", str(tmp_file)])
+            result = BlackRunner().invoke(grey.main, ["--diff", str(tmp_file)])
             self.assertEqual(result.exit_code, 0)
         finally:
             os.unlink(tmp_file)
@@ -1519,40 +1519,40 @@ class BlackTestCase(BlackBaseTestCase):
         """Test the code option with no changes."""
         code = 'print("Hello world")\n'
         args = ["--code", code]
-        result = CliRunner().invoke(blackish.main, args)
+        result = CliRunner().invoke(grey.main, args)
 
         self.compare_results(result, code, 0)
 
     def test_code_option_changed(self) -> None:
         """Test the code option when changes are required."""
         code = "print('hello world')"
-        formatted = blackish.format_str(code, mode=DEFAULT_MODE)
+        formatted = grey.format_str(code, mode=DEFAULT_MODE)
 
         args = ["--code", code]
-        result = CliRunner().invoke(blackish.main, args)
+        result = CliRunner().invoke(grey.main, args)
 
         self.compare_results(result, formatted, 0)
 
     def test_code_option_check(self) -> None:
         """Test the code option when check is passed."""
         args = ["--check", "--code", 'print("Hello world")\n']
-        result = CliRunner().invoke(blackish.main, args)
+        result = CliRunner().invoke(grey.main, args)
         self.compare_results(result, "", 0)
 
     def test_code_option_check_changed(self) -> None:
         """Test the code option when changes are required, and check is passed."""
         args = ["--check", "--code", "print('hello world')"]
-        result = CliRunner().invoke(blackish.main, args)
+        result = CliRunner().invoke(grey.main, args)
         self.compare_results(result, "", 1)
 
     def test_code_option_diff(self) -> None:
         """Test the code option when diff is passed."""
         code = "print('hello world')"
-        formatted = blackish.format_str(code, mode=DEFAULT_MODE)
+        formatted = grey.format_str(code, mode=DEFAULT_MODE)
         result_diff = diff(code, formatted, "STDIN", "STDOUT")
 
         args = ["--diff", "--code", code]
-        result = CliRunner().invoke(blackish.main, args)
+        result = CliRunner().invoke(grey.main, args)
 
         # Remove time from diff
         output = DIFF_TIME.sub("", result.output)
@@ -1563,13 +1563,13 @@ class BlackTestCase(BlackBaseTestCase):
     def test_code_option_color_diff(self) -> None:
         """Test the code option when color and diff are passed."""
         code = "print('hello world')"
-        formatted = blackish.format_str(code, mode=DEFAULT_MODE)
+        formatted = grey.format_str(code, mode=DEFAULT_MODE)
 
         result_diff = diff(code, formatted, "STDIN", "STDOUT")
         result_diff = color_diff(result_diff)
 
         args = ["--diff", "--color", "--code", code]
-        result = CliRunner().invoke(blackish.main, args)
+        result = CliRunner().invoke(grey.main, args)
 
         # Remove time from diff
         output = DIFF_TIME.sub("", result.output)
@@ -1580,25 +1580,25 @@ class BlackTestCase(BlackBaseTestCase):
     @pytest.mark.incompatible_with_mypyc
     def test_code_option_safe(self) -> None:
         """Test that the code option throws an error when the sanity checks fail."""
-        # Patch blackish.assert_equivalent to ensure the sanity checks fail
-        with patch.object(blackish, "assert_equivalent", side_effect=AssertionError):
+        # Patch grey.assert_equivalent to ensure the sanity checks fail
+        with patch.object(grey, "assert_equivalent", side_effect=AssertionError):
             code = 'print("Hello world")'
             error_msg = f"{code}\nerror: cannot format <string>: \n"
 
             args = ["--safe", "--code", code]
-            result = CliRunner().invoke(blackish.main, args)
+            result = CliRunner().invoke(grey.main, args)
 
             self.compare_results(result, error_msg, 123)
 
     def test_code_option_fast(self) -> None:
         """Test that the code option ignores errors when the sanity checks fail."""
-        # Patch blackish.assert_equivalent to ensure the sanity checks fail
-        with patch.object(blackish, "assert_equivalent", side_effect=AssertionError):
+        # Patch grey.assert_equivalent to ensure the sanity checks fail
+        with patch.object(grey, "assert_equivalent", side_effect=AssertionError):
             code = 'print("Hello world")'
-            formatted = blackish.format_str(code, mode=DEFAULT_MODE)
+            formatted = grey.format_str(code, mode=DEFAULT_MODE)
 
             args = ["--fast", "--code", code]
-            result = CliRunner().invoke(blackish.main, args)
+            result = CliRunner().invoke(grey.main, args)
 
             self.compare_results(result, formatted, 0)
 
@@ -1607,11 +1607,11 @@ class BlackTestCase(BlackBaseTestCase):
         """
         Test that the code option finds the pyproject.toml in the current directory.
         """
-        with patch.object(blackish, "parse_pyproject_toml", return_value={}) as parse:
+        with patch.object(grey, "parse_pyproject_toml", return_value={}) as parse:
             args = ["--code", "print"]
             # This is the only directory known to contain a pyproject.toml
             with change_directory(PROJECT_ROOT):
-                CliRunner().invoke(blackish.main, args)
+                CliRunner().invoke(grey.main, args)
                 pyproject_path = Path(Path.cwd(), "pyproject.toml").resolve()
 
             assert (
@@ -1628,10 +1628,10 @@ class BlackTestCase(BlackBaseTestCase):
         """
         Test that the code option finds the pyproject.toml in the parent directory.
         """
-        with patch.object(blackish, "parse_pyproject_toml", return_value={}) as parse:
+        with patch.object(grey, "parse_pyproject_toml", return_value={}) as parse:
             with change_directory(THIS_DIR):
                 args = ["--code", "print"]
-                CliRunner().invoke(blackish.main, args)
+                CliRunner().invoke(grey.main, args)
 
                 pyproject_path = Path(Path().cwd().parent, "pyproject.toml").resolve()
                 assert (
@@ -1647,14 +1647,14 @@ class BlackTestCase(BlackBaseTestCase):
         """
         Test that an unexpected EOF SyntaxError is nicely presented.
         """
-        with pytest.raises(blackish.parsing.InvalidInput) as exc_info:
-            blackish.lib2to3_parse("print(", {})
+        with pytest.raises(grey.parsing.InvalidInput) as exc_info:
+            grey.lib2to3_parse("print(", {})
 
         exc_info.match("Cannot parse: 2:0: EOF in multi-line statement")
 
     def test_equivalency_ast_parse_failure_includes_error(self) -> None:
         with pytest.raises(AssertionError) as err:
-            blackish.assert_equivalent("a«»a  = 1", "a«»a  = 1")
+            grey.assert_equivalent("a«»a  = 1", "a«»a  = 1")
 
         err.match("--safe")
         # Unfortunately the SyntaxError message has changed in newer versions so we
@@ -1677,7 +1677,7 @@ class TestCaching:
 
         # Force user_cache_dir to use the temporary directory for easier assertions
         patch_user_cache_dir = patch(
-            target="blackish.cache.user_cache_dir",
+            target="grey.cache.user_cache_dir",
             autospec=True,
             return_value=str(workspace1),
         )
@@ -1696,11 +1696,11 @@ class TestCaching:
         with cache_dir() as workspace:
             cache_file = get_cache_file(mode)
             cache_file.write_text("this is not a pickle")
-            assert blackish.read_cache(mode) == {}
+            assert grey.read_cache(mode) == {}
             src = (workspace / "test.py").resolve()
             src.write_text("print('hello')")
             invokeBlack([str(src)])
-            cache = blackish.read_cache(mode)
+            cache = grey.read_cache(mode)
             assert str(src) in cache
 
     def test_cache_single_file_already_cached(self) -> None:
@@ -1708,7 +1708,7 @@ class TestCaching:
         with cache_dir() as workspace:
             src = (workspace / "test.py").resolve()
             src.write_text("print('hello')")
-            blackish.write_cache({}, [src], mode)
+            grey.write_cache({}, [src], mode)
             invokeBlack([str(src)])
             assert src.read_text() == "print('hello')"
 
@@ -1724,13 +1724,13 @@ class TestCaching:
             two = (workspace / "two.py").resolve()
             with two.open("w") as fobj:
                 fobj.write("print('hello')")
-            blackish.write_cache({}, [one], mode)
+            grey.write_cache({}, [one], mode)
             invokeBlack([str(workspace)])
             with one.open("r") as fobj:
                 assert fobj.read() == "print('hello')"
             with two.open("r") as fobj:
                 assert fobj.read() == 'print("hello")\n'
-            cache = blackish.read_cache(mode)
+            cache = grey.read_cache(mode)
             assert str(one) in cache
             assert str(two) in cache
 
@@ -1741,8 +1741,8 @@ class TestCaching:
             src = (workspace / "test.py").resolve()
             with src.open("w") as fobj:
                 fobj.write("print('hello')")
-            with patch("blackish.read_cache") as read_cache, patch(
-                "blackish.write_cache"
+            with patch("grey.read_cache") as read_cache, patch(
+                "grey.write_cache"
             ) as write_cache:
                 cmd = [str(src), "--diff"]
                 if color:
@@ -1761,7 +1761,7 @@ class TestCaching:
                 src = (workspace / f"test{tag}.py").resolve()
                 with src.open("w") as fobj:
                     fobj.write("print('hello')")
-            with patch("blackish.Manager", wraps=multiprocessing.Manager) as mgr:
+            with patch("grey.Manager", wraps=multiprocessing.Manager) as mgr:
                 cmd = ["--diff", str(workspace)]
                 if color:
                     cmd.append("--color")
@@ -1774,7 +1774,7 @@ class TestCaching:
         mode = DEFAULT_MODE
         with cache_dir():
             result = CliRunner().invoke(
-                blackish.main, ["-"], input=BytesIO(b"print('hello')")
+                grey.main, ["-"], input=BytesIO(b"print('hello')")
             )
             assert not result.exit_code
             cache_file = get_cache_file(mode)
@@ -1783,17 +1783,17 @@ class TestCaching:
     def test_read_cache_no_cachefile(self) -> None:
         mode = DEFAULT_MODE
         with cache_dir():
-            assert blackish.read_cache(mode) == {}
+            assert grey.read_cache(mode) == {}
 
     def test_write_cache_read_cache(self) -> None:
         mode = DEFAULT_MODE
         with cache_dir() as workspace:
             src = (workspace / "test.py").resolve()
             src.touch()
-            blackish.write_cache({}, [src], mode)
-            cache = blackish.read_cache(mode)
+            grey.write_cache({}, [src], mode)
+            cache = grey.read_cache(mode)
             assert str(src) in cache
-            assert cache[str(src)] == blackish.get_cache_info(src)
+            assert cache[str(src)] == grey.get_cache_info(src)
 
     def test_filter_cached(self) -> None:
         with TemporaryDirectory() as workspace:
@@ -1805,10 +1805,10 @@ class TestCaching:
             cached.touch()
             cached_but_changed.touch()
             cache = {
-                str(cached): blackish.get_cache_info(cached),
+                str(cached): grey.get_cache_info(cached),
                 str(cached_but_changed): (0.0, 0),
             }
-            todo, done = blackish.filter_cached(
+            todo, done = grey.filter_cached(
                 cache, {uncached, cached, cached_but_changed}
             )
             assert todo == {uncached, cached_but_changed}
@@ -1818,7 +1818,7 @@ class TestCaching:
         mode = DEFAULT_MODE
         with cache_dir(exists=False) as workspace:
             assert not workspace.exists()
-            blackish.write_cache({}, [], mode)
+            grey.write_cache({}, [], mode)
             assert workspace.exists()
 
     @event_loop()
@@ -1834,7 +1834,7 @@ class TestCaching:
             with clean.open("w") as fobj:
                 fobj.write('print("hello")\n')
             invokeBlack([str(workspace)], exit_code=123)
-            cache = blackish.read_cache(mode)
+            cache = grey.read_cache(mode)
             assert str(failing) not in cache
             assert str(clean) in cache
 
@@ -1842,7 +1842,7 @@ class TestCaching:
         mode = DEFAULT_MODE
         with cache_dir(), patch.object(Path, "open") as mock:
             mock.side_effect = OSError
-            blackish.write_cache({}, [], mode)
+            grey.write_cache({}, [], mode)
 
     def test_read_cache_line_lengths(self) -> None:
         mode = DEFAULT_MODE
@@ -1850,10 +1850,10 @@ class TestCaching:
         with cache_dir() as workspace:
             path = (workspace / "file.py").resolve()
             path.touch()
-            blackish.write_cache({}, [path], mode)
-            one = blackish.read_cache(mode)
+            grey.write_cache({}, [path], mode)
+            one = grey.read_cache(mode)
             assert str(path) in one
-            two = blackish.read_cache(short_mode)
+            two = grey.read_cache(short_mode)
             assert str(path) not in two
 
 
@@ -1876,7 +1876,7 @@ def assert_collected_sources(
         None if extend_exclude is None else compile_pattern(extend_exclude)
     )
     gs_force_exclude = None if force_exclude is None else compile_pattern(force_exclude)
-    collected = blackish.get_sources(
+    collected = grey.get_sources(
         ctx=ctx or FakeContext(),
         src=gs_src,
         quiet=False,
@@ -1885,7 +1885,7 @@ def assert_collected_sources(
         exclude=gs_exclude,
         extend_exclude=gs_extend_exclude,
         force_exclude=gs_force_exclude,
-        report=blackish.Report(),
+        report=grey.Report(),
         stdin_filename=stdin_filename,
     )
     assert sorted(collected) == sorted(gs_expected)
@@ -1917,11 +1917,11 @@ class TestFileCollection:
         ctx.obj["root"] = base
         assert_collected_sources(src, expected, ctx=ctx, extend_exclude=r"/exclude/")
 
-    @patch("blackish.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    @patch("grey.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_exclude_for_issue_1572(self) -> None:
         # Exclude shouldn't touch files that were explicitly given to Black through the
         # CLI. Exclude is supposed to only apply to the recursive discovery of files.
-        # https://github.com/psf/blackish/issues/1572
+        # https://github.com/psf/grey/issues/1572
         path = DATA_DIR / "include_exclude_tests"
         src = [path / "b/exclude/a.py"]
         expected = [path / "b/exclude/a.py"]
@@ -1931,7 +1931,7 @@ class TestFileCollection:
         path = THIS_DIR / "data" / "include_exclude_tests"
         include = re.compile(r"\.pyi?$")
         exclude = re.compile(r"")
-        report = blackish.Report()
+        report = grey.Report()
         gitignore = PathSpec.from_lines(
             "gitwildmatch", ["exclude/", ".definitely_exclude"]
         )
@@ -1942,7 +1942,7 @@ class TestFileCollection:
         ]
         this_abs = THIS_DIR.resolve()
         sources.extend(
-            blackish.gen_python_files(
+            grey.gen_python_files(
                 path.iterdir(),
                 this_abs,
                 include,
@@ -1961,8 +1961,8 @@ class TestFileCollection:
         path = Path(THIS_DIR / "data" / "nested_gitignore_tests")
         include = re.compile(r"\.pyi?$")
         exclude = re.compile(r"")
-        root_gitignore = blackish.files.get_gitignore(path)
-        report = blackish.Report()
+        root_gitignore = grey.files.get_gitignore(path)
+        report = grey.Report()
         expected: List[Path] = [
             Path(path / "x.py"),
             Path(path / "root/b.py"),
@@ -1971,7 +1971,7 @@ class TestFileCollection:
         ]
         this_abs = THIS_DIR.resolve()
         sources = list(
-            blackish.gen_python_files(
+            grey.gen_python_files(
                 path.iterdir(),
                 this_abs,
                 include,
@@ -1990,7 +1990,7 @@ class TestFileCollection:
         path = THIS_DIR / "data" / "invalid_gitignore_tests"
         empty_config = path / "pyproject.toml"
         result = BlackRunner().invoke(
-            blackish.main, ["--verbose", "--config", str(empty_config), str(path)]
+            grey.main, ["--verbose", "--config", str(empty_config), str(path)]
         )
         assert result.exit_code == 1
         assert result.stderr_bytes is not None
@@ -2002,7 +2002,7 @@ class TestFileCollection:
         path = THIS_DIR / "data" / "invalid_nested_gitignore_tests"
         empty_config = path / "pyproject.toml"
         result = BlackRunner().invoke(
-            blackish.main, ["--verbose", "--config", str(empty_config), str(path)]
+            grey.main, ["--verbose", "--config", str(empty_config), str(path)]
         )
         assert result.exit_code == 1
         assert result.stderr_bytes is not None
@@ -2045,9 +2045,9 @@ class TestFileCollection:
         path = MagicMock()
         root = THIS_DIR.resolve()
         child = MagicMock()
-        include = re.compile(blackish.DEFAULT_INCLUDES)
-        exclude = re.compile(blackish.DEFAULT_EXCLUDES)
-        report = blackish.Report()
+        include = re.compile(grey.DEFAULT_INCLUDES)
+        exclude = re.compile(grey.DEFAULT_EXCLUDES)
+        report = grey.Report()
         gitignore = PathSpec.from_lines("gitwildmatch", [])
         # `child` should behave like a symlink which resolved path is clearly
         # outside of the `root` directory.
@@ -2056,7 +2056,7 @@ class TestFileCollection:
         child.as_posix.return_value = "/a/b/c"
         try:
             list(
-                blackish.gen_python_files(
+                grey.gen_python_files(
                     path.iterdir(),
                     root,
                     include,
@@ -2074,13 +2074,13 @@ class TestFileCollection:
         path.iterdir.assert_called_once()
         child.resolve.assert_called_once()
 
-    @patch("blackish.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    @patch("grey.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin(self) -> None:
         src = ["-"]
         expected = ["-"]
         assert_collected_sources(src, expected, include="", exclude=r"/exclude/|a\.py")
 
-    @patch("blackish.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    @patch("grey.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename(self) -> None:
         src = ["-"]
         stdin_filename = str(THIS_DIR / "data/collections.py")
@@ -2092,7 +2092,7 @@ class TestFileCollection:
             stdin_filename=stdin_filename,
         )
 
-    @patch("blackish.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    @patch("grey.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_exclude(self) -> None:
         # Exclude shouldn't exclude stdin_filename since it is mimicking the
         # file being passed directly. This is the same as
@@ -2108,7 +2108,7 @@ class TestFileCollection:
             stdin_filename=stdin_filename,
         )
 
-    @patch("blackish.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    @patch("grey.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_extend_exclude(self) -> None:
         # Extend exclude shouldn't exclude stdin_filename since it is mimicking the
         # file being passed directly. This is the same as
@@ -2124,7 +2124,7 @@ class TestFileCollection:
             stdin_filename=stdin_filename,
         )
 
-    @patch("blackish.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    @patch("grey.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_force_exclude(self) -> None:
         # Force exclude should exclude the file when passing it through
         # stdin_filename
@@ -2139,17 +2139,17 @@ class TestFileCollection:
 
 
 try:
-    with open(blackish.__file__, "r", encoding="utf-8") as _bf:
-        blackish_source_lines = _bf.readlines()
+    with open(grey.__file__, "r", encoding="utf-8") as _bf:
+        grey_source_lines = _bf.readlines()
 except UnicodeDecodeError:
-    if not blackish.COMPILED:
+    if not grey.COMPILED:
         raise
 
 
 def tracefunc(
     frame: types.FrameType, event: str, arg: Any
 ) -> Callable[[types.FrameType, str, Any], Any]:
-    """Show function calls `from blackish/__init__.py` as they happen.
+    """Show function calls `from grey/__init__.py` as they happen.
 
     Register this with `sys.settrace()` in a test you're debugging.
     """
@@ -2161,10 +2161,10 @@ def tracefunc(
     filename = frame.f_code.co_filename
     lineno = frame.f_lineno
     func_sig_lineno = lineno - 1
-    funcname = blackish_source_lines[func_sig_lineno].strip()
+    funcname = grey_source_lines[func_sig_lineno].strip()
     while funcname.startswith("@"):
         func_sig_lineno += 1
-        funcname = blackish_source_lines[func_sig_lineno].strip()
-    if "blackish/__init__.py" in filename:
+        funcname = grey_source_lines[func_sig_lineno].strip()
+    if "grey/__init__.py" in filename:
         print(f"{' ' * stack}{lineno}:{funcname}")
     return tracefunc

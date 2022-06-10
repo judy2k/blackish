@@ -37,30 +37,30 @@ from click.core import ParameterSource
 from dataclasses import replace
 from mypy_extensions import mypyc_attr
 
-from blackish.const import DEFAULT_LINE_LENGTH, DEFAULT_INCLUDES, DEFAULT_EXCLUDES
-from blackish.const import STDIN_PLACEHOLDER
-from blackish.nodes import STARS, syms, is_simple_decorator_expression
-from blackish.nodes import is_string_token
-from blackish.lines import Line, EmptyLineTracker
-from blackish.linegen import transform_line, LineGenerator, LN
-from blackish.comments import normalize_fmt_off
-from blackish.mode import FUTURE_FLAG_TO_FEATURE, Mode, TargetVersion
-from blackish.mode import Feature, supports_feature, VERSION_TO_FEATURES
-from blackish.cache import read_cache, write_cache, get_cache_info, filter_cached, Cache
-from blackish.concurrency import cancel, shutdown, maybe_install_uvloop
-from blackish.output import dump_to_file, ipynb_diff, diff, color_diff, out, err
-from blackish.report import Report, Changed, NothingChanged
-from blackish.files import (
+from grey.const import DEFAULT_LINE_LENGTH, DEFAULT_INCLUDES, DEFAULT_EXCLUDES
+from grey.const import STDIN_PLACEHOLDER
+from grey.nodes import STARS, syms, is_simple_decorator_expression
+from grey.nodes import is_string_token
+from grey.lines import Line, EmptyLineTracker
+from grey.linegen import transform_line, LineGenerator, LN
+from grey.comments import normalize_fmt_off
+from grey.mode import FUTURE_FLAG_TO_FEATURE, Mode, TargetVersion
+from grey.mode import Feature, supports_feature, VERSION_TO_FEATURES
+from grey.cache import read_cache, write_cache, get_cache_info, filter_cached, Cache
+from grey.concurrency import cancel, shutdown, maybe_install_uvloop
+from grey.output import dump_to_file, ipynb_diff, diff, color_diff, out, err
+from grey.report import Report, Changed, NothingChanged
+from grey.files import (
     find_project_root,
     find_pyproject_toml,
     parse_pyproject_toml,
     find_user_pyproject_toml,
 )
-from blackish.files import gen_python_files, get_gitignore, normalize_path_maybe_ignore
-from blackish.files import wrap_stream_for_windows
-from blackish.parsing import InvalidInput  # noqa F401
-from blackish.parsing import lib2to3_parse, parse_ast, stringify_ast
-from blackish.handle_ipynb_magics import (
+from grey.files import gen_python_files, get_gitignore, normalize_path_maybe_ignore
+from grey.files import wrap_stream_for_windows
+from grey.parsing import InvalidInput  # noqa F401
+from grey.parsing import lib2to3_parse, parse_ast, stringify_ast
+from grey.handle_ipynb_magics import (
     mask_cell,
     unmask_cell,
     remove_trailing_semicolon,
@@ -75,7 +75,7 @@ from blackish.handle_ipynb_magics import (
 from blib2to3.pytree import Node, Leaf
 from blib2to3.pgen2 import token
 
-from _blackish_version import version as __version__
+from _grey_version import version as __version__
 
 if TYPE_CHECKING:
     from concurrent.futures import Executor
@@ -138,7 +138,7 @@ def read_pyproject_toml(
         return None
     else:
         # Sanitize the values to be Click friendly. For more information please see:
-        # https://github.com/psf/blackish/issues/1458
+        # https://github.com/psf/grey/issues/1458
         # https://github.com/pallets/click/issues/1567
         config = {
             k: str(v) if not isinstance(v, (list, dict)) else v
@@ -1136,18 +1136,18 @@ def format_str(src_contents: str, *, mode: Mode) -> str:
     `mode` determines formatting options, such as how many characters per line are
     allowed.  Example:
 
-    >>> import blackish
-    >>> print(blackish.format_str("def f(arg:str='')->None:...", mode=blackish.Mode()))
+    >>> import grey
+    >>> print(grey.format_str("def f(arg:str='')->None:...", mode=grey.Mode()))
     def f(arg: str = "") -> None:
         ...
 
     A more complex example:
 
     >>> print(
-    ...   blackish.format_str(
+    ...   grey.format_str(
     ...     "def f(arg:str='')->None: hey",
-    ...     mode=blackish.Mode(
-    ...       target_versions={blackish.TargetVersion.PY36},
+    ...     mode=grey.Mode(
+    ...       target_versions={grey.TargetVersion.PY36},
     ...       line_length=10,
     ...       string_normalization=False,
     ...       is_pyi=False,
@@ -1401,7 +1401,7 @@ def assert_equivalent(src: str, dst: str) -> None:
         log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
         raise AssertionError(
             f"INTERNAL ERROR: Black produced invalid code: {exc}. "
-            "Please report a bug on https://github.com/psf/blackish/issues.  "
+            "Please report a bug on https://github.com/psf/grey/issues.  "
             f"This invalid output might be helpful: {log}"
         ) from None
 
@@ -1411,7 +1411,7 @@ def assert_equivalent(src: str, dst: str) -> None:
         log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
         raise AssertionError(
             "INTERNAL ERROR: Black produced code that is not equivalent to the source."
-            "  Please report a bug on https://github.com/psf/blackish/issues.  This"
+            "  Please report a bug on https://github.com/psf/grey/issues.  This"
             f" diff might be helpful: {log}"
         ) from None
 
@@ -1431,7 +1431,7 @@ def assert_stable(src: str, dst: str, mode: Mode) -> None:
         raise AssertionError(
             "INTERNAL ERROR: Black produced different code on the second pass of the"
             " formatter.  Please report a bug on"
-            " https://github.com/psf/blackish/issues.  This diff might be helpful:"
+            " https://github.com/psf/grey/issues.  This diff might be helpful:"
             f" {log}"
         ) from None
 

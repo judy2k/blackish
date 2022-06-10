@@ -12,15 +12,15 @@ try:
 except ImportError as ie:
     raise ImportError(
         f"aiohttp dependency is not installed: {ie}. "
-        + "Please re-install blackish with the '[d]' extra install "
-        + "to obtain aiohttp_cors: `pip install blackish[d]`"
+        + "Please re-install grey with the '[d]' extra install "
+        + "to obtain aiohttp_cors: `pip install grey[d]`"
     ) from None
 
-import blackish
-from blackish.concurrency import maybe_install_uvloop
+import grey
+from grey.concurrency import maybe_install_uvloop
 import click
 
-from _blackish_version import version as __version__
+from _grey_version import version as __version__
 
 # This is used internally by tests to shut down the server prematurely
 _stop_signal = asyncio.Event()
@@ -57,12 +57,12 @@ class InvalidVariantHeader(Exception):
     "--bind-host", type=str, help="Address to bind the server to.", default="localhost"
 )
 @click.option("--bind-port", type=int, help="Port to listen on", default=45484)
-@click.version_option(version=blackish.__version__)
+@click.version_option(version=grey.__version__)
 def main(bind_host: str, bind_port: int) -> None:
     logging.basicConfig(level=logging.INFO)
     app = make_app()
-    ver = blackish.__version__
-    blackish.out(f"blackishd version {ver} listening on {bind_host} port {bind_port}")
+    ver = grey.__version__
+    grey.out(f"greyd version {ver} listening on {bind_host} port {bind_port}")
     web.run_app(app, host=bind_host, port=bind_port, handle_signals=True, print=None)
 
 
@@ -84,7 +84,7 @@ async def handle(request: web.Request, executor: Executor) -> web.Response:
             )
         try:
             line_length = int(
-                request.headers.get(LINE_LENGTH_HEADER, blackish.DEFAULT_LINE_LENGTH)
+                request.headers.get(LINE_LENGTH_HEADER, grey.DEFAULT_LINE_LENGTH)
             )
         except ValueError:
             return web.Response(status=400, text="Invalid line length header value")
@@ -111,7 +111,7 @@ async def handle(request: web.Request, executor: Executor) -> web.Response:
         fast = False
         if request.headers.get(FAST_OR_SAFE_HEADER, "safe") == "fast":
             fast = True
-        mode = blackish.FileMode(
+        mode = grey.FileMode(
             target_versions=versions,
             is_pyi=pyi,
             line_length=line_length,
@@ -126,7 +126,7 @@ async def handle(request: web.Request, executor: Executor) -> web.Response:
         loop = asyncio.get_event_loop()
         formatted_str = await loop.run_in_executor(
             executor,
-            partial(blackish.format_file_contents, req_str, fast=fast, mode=mode),
+            partial(grey.format_file_contents, req_str, fast=fast, mode=mode),
         )
 
         # Only output the diff in the HTTP response
@@ -138,7 +138,7 @@ async def handle(request: web.Request, executor: Executor) -> web.Response:
             loop = asyncio.get_event_loop()
             formatted_str = await loop.run_in_executor(
                 executor,
-                partial(blackish.diff, req_str, formatted_str, src_name, dst_name),
+                partial(grey.diff, req_str, formatted_str, src_name, dst_name),
             )
 
         return web.Response(
@@ -147,16 +147,16 @@ async def handle(request: web.Request, executor: Executor) -> web.Response:
             headers=headers,
             text=formatted_str,
         )
-    except blackish.NothingChanged:
+    except grey.NothingChanged:
         return web.Response(status=204, headers=headers)
-    except blackish.InvalidInput as e:
+    except grey.InvalidInput as e:
         return web.Response(status=400, headers=headers, text=str(e))
     except Exception as e:
         logging.exception("Exception during handling a request")
         return web.Response(status=500, headers=headers, text=str(e))
 
 
-def parse_python_variant_header(value: str) -> Tuple[bool, Set[blackish.TargetVersion]]:
+def parse_python_variant_header(value: str) -> Tuple[bool, Set[grey.TargetVersion]]:
     if value == "pyi":
         return True, set()
     else:
@@ -181,9 +181,9 @@ def parse_python_variant_header(value: str) -> Tuple[bool, Set[blackish.TargetVe
                     # Default to lowest supported minor version.
                     minor = 7 if major == 2 else 3
                 version_str = f"PY{major}{minor}"
-                if major == 3 and not hasattr(blackish.TargetVersion, version_str):
+                if major == 3 and not hasattr(grey.TargetVersion, version_str):
                     raise InvalidVariantHeader(f"3.{minor} is not supported")
-                versions.add(blackish.TargetVersion[version_str])
+                versions.add(grey.TargetVersion[version_str])
             except (KeyError, ValueError):
                 raise InvalidVariantHeader("expected e.g. '3.7', 'py3.5'") from None
         return False, versions
@@ -192,7 +192,7 @@ def parse_python_variant_header(value: str) -> Tuple[bool, Set[blackish.TargetVe
 def patched_main() -> None:
     maybe_install_uvloop()
     freeze_support()
-    blackish.patch_click()
+    grey.patch_click()
     main()
 
 

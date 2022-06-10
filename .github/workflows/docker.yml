@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   docker:
-    if: github.repository == 'judy2k/blackish'
+    if: github.repository == 'judy2k/grey'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,7 +41,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: judy2k/blackish:latest,judy2k/blackish:${{ env.GIT_TAG }}
+          tags: judy2k/grey:latest,judy2k/grey:${{ env.GIT_TAG }}
 
       - name: Build and push latest_release tag
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
@@ -50,7 +50,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: judy2k/blackish:latest_release
+          tags: judy2k/grey:latest_release
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

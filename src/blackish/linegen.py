@@ -5,35 +5,35 @@ from functools import partial, wraps
 import sys
 from typing import Collection, Iterator, List, Optional, Set, Union, cast
 
-from blackish.nodes import WHITESPACE, RARROW, STATEMENT, STANDALONE_COMMENT
-from blackish.nodes import ASSIGNMENTS, OPENING_BRACKETS, CLOSING_BRACKETS
-from blackish.nodes import Visitor, syms, is_arith_like, ensure_visible
-from blackish.nodes import (
+from grey.nodes import WHITESPACE, RARROW, STATEMENT, STANDALONE_COMMENT
+from grey.nodes import ASSIGNMENTS, OPENING_BRACKETS, CLOSING_BRACKETS
+from grey.nodes import Visitor, syms, is_arith_like, ensure_visible
+from grey.nodes import (
     is_docstring,
     is_empty_tuple,
     is_one_tuple,
     is_one_sequence_between,
 )
-from blackish.nodes import is_name_token, is_lpar_token, is_rpar_token
-from blackish.nodes import (
+from grey.nodes import is_name_token, is_lpar_token, is_rpar_token
+from grey.nodes import (
     is_walrus_assignment,
     is_yield,
     is_vararg,
     is_multiline_string,
 )
-from blackish.nodes import is_stub_suite, is_stub_body, is_atom_with_invisible_parens
-from blackish.nodes import wrap_in_parentheses
-from blackish.brackets import max_delimiter_priority_in_atom
-from blackish.brackets import DOT_PRIORITY, COMMA_PRIORITY
-from blackish.lines import Line, line_to_string, is_line_short_enough
-from blackish.lines import can_omit_invisible_parens, can_be_split, append_leaves
-from blackish.comments import generate_comments, list_comments, FMT_OFF
-from blackish.numerics import normalize_numeric_literal
-from blackish.strings import get_string_prefix, fix_docstring
-from blackish.strings import normalize_string_prefix, normalize_string_quotes
-from blackish.trans import Transformer, CannotTransform, StringMerger, StringSplitter
-from blackish.trans import StringParenWrapper, StringParenStripper, hug_power_op
-from blackish.mode import Mode, Feature, Preview
+from grey.nodes import is_stub_suite, is_stub_body, is_atom_with_invisible_parens
+from grey.nodes import wrap_in_parentheses
+from grey.brackets import max_delimiter_priority_in_atom
+from grey.brackets import DOT_PRIORITY, COMMA_PRIORITY
+from grey.lines import Line, line_to_string, is_line_short_enough
+from grey.lines import can_omit_invisible_parens, can_be_split, append_leaves
+from grey.comments import generate_comments, list_comments, FMT_OFF
+from grey.numerics import normalize_numeric_literal
+from grey.strings import get_string_prefix, fix_docstring
+from grey.strings import normalize_string_prefix, normalize_string_quotes
+from grey.trans import Transformer, CannotTransform, StringMerger, StringSplitter
+from grey.trans import StringParenWrapper, StringParenStripper, hug_power_op
+from grey.mode import Mode, Feature, Preview
 
 from blib2to3.pytree import Node, Leaf
 from blib2to3.pgen2 import token

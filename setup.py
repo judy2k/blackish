@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 import sys
 import os
 
-assert sys.version_info >= (3, 6, 2), "blackish requires Python 3.6.2+"
+assert sys.version_info >= (3, 6, 2), "grey requires Python 3.6.2+"
 from pathlib import Path  # noqa E402
 from typing import List  # noqa: E402
 
@@ -48,18 +48,18 @@ if USE_MYPYC:
         # Not performance sensitive, so save bytes + compilation time:
         "blib2to3/__init__.py",
         "blib2to3/pgen2/__init__.py",
-        "blackish/output.py",
-        "blackish/concurrency.py",
-        "blackish/files.py",
-        "blackish/report.py",
+        "grey/output.py",
+        "grey/concurrency.py",
+        "grey/files.py",
+        "grey/report.py",
         # Breaks the test suite when compiled (and is also useless):
-        "blackish/debug.py",
+        "grey/debug.py",
         # Compiled modules can't be run directly and that's a problem here:
-        "blackish/__main__.py",
+        "grey/__main__.py",
     ]
     discovered = []
-    # There's no good reason for blackishd to be compiled.
-    discovered.extend(find_python_files(src / "blackish"))
+    # There's no good reason for greyd to be compiled.
+    discovered.extend(find_python_files(src / "grey"))
     discovered.extend(find_python_files(src / "blib2to3"))
     mypyc_targets = [
         str(p) for p in discovered if p.relative_to(src).as_posix() not in blocklist
@@ -71,9 +71,9 @@ else:
     ext_modules = []
 
 setup(
-    name="blackish",
+    name="grey",
     use_scm_version={
-        "write_to": "src/_blackish_version.py",
+        "write_to": "src/_grey_version.py",
         "write_to_template": 'version = "{version}"\n',
     },
     description="The uncompromising code formatter.",
@@ -82,18 +82,18 @@ setup(
     keywords="automation formatter yapf autopep8 pyfmt gofmt rustfmt",
     author="Łukasz Langa",
     author_email="lukasz@langa.pl",
-    url="https://github.com/judy2k/blackish",
+    url="https://github.com/judy2k/grey",
     project_urls={
-        "Changelog": "https://github.com/judy2k/blackish/blob/main/CHANGES.md"
+        "Changelog": "https://github.com/judy2k/grey/blob/main/CHANGES.md"
     },
     license="MIT",
-    py_modules=["_blackish_version"],
+    py_modules=["_grey_version"],
     ext_modules=ext_modules,
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     package_data={
         "blib2to3": ["*.txt"],
-        "blackish": ["py.typed"],
+        "grey": ["py.typed"],
     },
     python_requires=">=3.6.2",
     zip_safe=False,
@@ -131,8 +131,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "blackish=blackish:patched_main",
-            "blackishd=blackishd:patched_main [d]",
+            "grey=grey:patched_main",
+            "greyd=greyd:patched_main [d]",
         ]
     },
 )
